@@ -177,14 +177,20 @@ def criar_orcamento():
     last_pedido = r_last.json()
     numero_pedido = (last_pedido[0]['numero_pedido'] + 1) if last_pedido else 1
 
-    # Criar orçamento
+    # Criar orçamento com return=representation para pegar o id
     payload = {"cliente_nome": cliente_nome, "numero_pedido": numero_pedido}
-    r = requests.post(f"{SUPABASE_URL}/rest/v1/orcamentos?returning=id", headers=HEADERS, json=payload)
+    r = requests.post(
+        f"{SUPABASE_URL}/rest/v1/orcamentos?return=representation",
+        headers=HEADERS,
+        json=payload
+    )
     r.raise_for_status()
     orcamento = r.json()
+    if not orcamento or "id" not in orcamento[0]:
+        return jsonify({"success": False, "error": "Não retornou ID do orçamento"}), 500
     orcamento_id = orcamento[0]["id"]
 
-    # Salvar portas vinculadas
+    # Salvar portas vinculadas ao orçamento
     portas_payload = []
     for p in portas:
         portas_payload.append({
@@ -194,10 +200,19 @@ def criar_orcamento():
             "svg": p.get("svg")
         })
     if portas_payload:
-        r_portas = requests.post(f"{SUPABASE_URL}/rest/v1/portas", headers=HEADERS, json=portas_payload)
+        r_portas = requests.post(
+            f"{SUPABASE_URL}/rest/v1/portas",
+            headers=HEADERS,
+            json=portas_payload
+        )
         r_portas.raise_for_status()
 
-    return jsonify({"success": True, "id": orcamento_id, "numero_pedido": numero_pedido, "cliente_nome": cliente_nome})
+    return jsonify({
+        "success": True,
+        "id": orcamento_id,
+        "numero_pedido": numero_pedido,
+        "cliente_nome": cliente_nome
+    })
 
 @app.route("/api/orcamentos", methods=["GET"])
 @login_required
