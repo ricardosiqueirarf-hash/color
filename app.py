@@ -83,6 +83,11 @@ def admin_page():
 def producao_page():
     return render_template("producao.html")
 
+@app.route("/insumos-page")
+@login_required
+def producao_page():
+    return render_template("insumos.html")
+
 # =====================
 # LOGIN
 # =====================
