@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
-    <title>Calculadora de Portas</title>
+    <title>Orçamento de Portas</title>
 
     <style>
         * {
@@ -58,7 +58,7 @@
             padding: 25px;
             display: flex;
             flex-direction: column;
-            gap: 20px;
+            gap: 25px;
         }
 
         .content h1 {
@@ -69,97 +69,85 @@
         .card {
             background-color: white;
             border-radius: 8px;
-            padding: 20px;
+            padding: 25px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.1);
             width: 100%;
         }
 
-        .form-group {
-            display: flex;
-            gap: 15px;
-            flex-wrap: wrap;
+        .tipologias {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+            gap: 20px;
         }
 
-        .form-group label {
-            display: flex;
-            flex-direction: column;
-            font-size: 0.9rem;
-            width: 200px;
-        }
-
-        .form-group input {
-            padding: 8px;
-            margin-top: 5px;
-            border-radius: 4px;
-            border: 1px solid #ccc;
-        }
-
-        .action-btn {
-            margin-top: 20px;
-            padding: 12px 20px;
+        .tipo-btn {
+            padding: 30px 20px;
+            border-radius: 10px;
             border: none;
-            border-radius: 6px;
+            cursor: pointer;
             background-color: #0078d7;
             color: white;
-            font-size: 1rem;
-            cursor: pointer;
+            font-size: 1.05rem;
+            font-weight: bold;
+            transition: background 0.2s, transform 0.1s;
         }
 
-        .action-btn:hover {
+        .tipo-btn:hover {
             background-color: #005fa3;
+            transform: translateY(-2px);
         }
     </style>
 </head>
 
 <body>
-    <div class="app">
+<div class="app">
 
-        <!-- MENU -->
-        <div class="sidebar">
-            <h2>ColorGlass</h2>
+    <!-- MENU -->
+    <div class="sidebar">
+        <h2>ColorGlass</h2>
 
-            <button onclick="go('/')">Home</button>
-            <button onclick="go('/perfis-page')">Perfis</button>
-            <button onclick="go('/vidros-page')">Vidros</button>
-            <button onclick="go('/insumos-page')">Insumos</button>
-            <button onclick="go('/agregar-page')">Agregar</button>
-            <button onclick="go('/login?next=/admin')">Admin</button>
-        </div>
-
-        <!-- CONTEÚDO -->
-        <div class="content">
-            <h1>Calculadora de Porta</h1>
-
-            <div class="card">
-                <h3>Dimensões</h3>
-
-                <div class="form-group">
-                    <label>
-                        Largura (mm)
-                        <input type="number" placeholder="Ex: 800">
-                    </label>
-
-                    <label>
-                        Altura (mm)
-                        <input type="number" placeholder="Ex: 2100">
-                    </label>
-
-                    <label>
-                        Quantidade
-                        <input type="number" value="1">
-                    </label>
-                </div>
-
-                <button class="action-btn">Calcular</button>
-            </div>
-
-        </div>
+        <button onclick="go('/')">Home</button>
+        <button onclick="go('/perfis-page')">Perfis</button>
+        <button onclick="go('/vidros-page')">Vidros</button>
+        <button onclick="go('/insumos-page')">Insumos</button>
+        <button onclick="go('/agregar-page')">Agregar</button>
+        <button onclick="go('/login?next=/admin')">Admin</button>
     </div>
 
-    <script>
-        function go(pagina) {
-            window.location.href = pagina;
-        }
-    </script>
+    <!-- CONTEÚDO -->
+    <div class="content">
+        <h1>Selecionar Tipologia de Porta</h1>
+
+        <div class="card">
+            <div class="tipologias">
+                <button class="tipo-btn" onclick="go('/porta-abrir')">
+                    Porta de Abrir
+                </button>
+
+                <button class="tipo-btn" onclick="go('/porta-correr')">
+                    Porta de Correr
+                </button>
+
+                <button class="tipo-btn" onclick="go('/porta-deslizante')">
+                    Porta Deslizante
+                </button>
+
+                <button class="tipo-btn" onclick="go('/porta-basculante')">
+                    Porta Basculante
+                </button>
+
+                <button class="tipo-btn" onclick="go('/porta-pivotante')">
+                    Porta Pivotante
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    function go(pagina) {
+        window.location.href = pagina;
+    }
+</script>
 </body>
 </html>
