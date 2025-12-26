@@ -88,6 +88,11 @@ def producao_page():
 def insumos_page():
     return render_template("insumos.html")
 
+@app.route("/orcamentos-page")
+@login_required
+def insumos_page():
+    return render_template("orcamentos.html")
+
 # =====================
 # LOGIN
 # =====================
