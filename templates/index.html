@@ -75,7 +75,9 @@ th { background:#ddd; }
 <script>
 function go(p){ window.location.href = p }
 
+// =====================
 // CARREGAR ORÇAMENTOS EXISTENTES
+// =====================
 function carregarOrcamentos() {
     fetch('/api/orcamentos')
     .then(res => res.json())
@@ -83,7 +85,6 @@ function carregarOrcamentos() {
         const container = document.getElementById("orcamentosExistentes");
         container.innerHTML = "";
 
-        // Se o endpoint retornar {success:true, orcamentos: [...]}
         const orcamentos = data.orcamentos || [];
         if(orcamentos.length === 0){
             container.innerHTML = "<em>Nenhum orçamento encontrado.</em>";
@@ -112,7 +113,9 @@ function carregarOrcamentos() {
 }
 carregarOrcamentos();
 
+// =====================
 // FICHA CLIENTE
+// =====================
 let cliente = {nome:"", id:null};
 let portasSalvas = [];
 let idCounter = 0;
@@ -125,22 +128,26 @@ function criarFichaCliente(){
     fetch('/api/orcamento', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({cliente_nome: cliente.nome, portas: []})
+        // envia apenas o nome do cliente
+        body:JSON.stringify({cliente_nome: cliente.nome})
     })
-    .then(res=>res.json())
-    .then(data=>{
+    .then(res => res.json())
+    .then(data => {
         if(data.success){
             cliente.id = data.id;
             alert("Ficha criada com sucesso! ID: "+data.id);
             document.getElementById("formCliente").style.display="none";
             document.getElementById("formPorta").style.display="block";
+            carregarOrcamentos();
         } else {
             alert("Erro ao criar ficha: "+data.error);
         }
     }).catch(err=>console.error(err));
 }
 
+// =====================
 // TIPOS DE PORTA
+// =====================
 const TIPOLOGIAS = {
     giro: ["largura","altura","perfil","vidro","dobradica"],
     deslizante: ["largura","altura","perfil","vidro","trilho","qtd_folhas"],
@@ -171,7 +178,9 @@ function renderCampos(){
     desenharPorta();
 }
 
+// =====================
 // DESENHAR PORTA
+// =====================
 function desenharPorta(){
     const larguraInput = document.getElementById("largura")
     const alturaInput = document.getElementById("altura")
@@ -199,7 +208,9 @@ function desenharPorta(){
     svg.appendChild(rect)
 }
 
-// SALVAR PORTAS
+// =====================
+// SALVAR PORTAS (LOCAL, não envia ao Flask)
+// =====================
 let portaEditandoId=null
 
 function salvarPorta(){
@@ -255,7 +266,9 @@ function editarPorta(id){
     desenharPorta()
 }
 
-// SALVAR ORÇAMENTO FINAL
+// =====================
+// SALVAR ORÇAMENTO FINAL (apenas nome do cliente)
+// =====================
 function salvarOrcamento(){
     if(!cliente.nome){ alert("Crie a ficha do cliente primeiro"); return }
     if(portasSalvas.length===0){ alert("Adicione pelo menos uma porta antes de salvar o orçamento"); return }
@@ -263,7 +276,8 @@ function salvarOrcamento(){
     fetch('/api/orcamento', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({cliente_nome: cliente.nome, portas: portasSalvas})
+        // envia apenas o cliente, portas desligadas
+        body:JSON.stringify({cliente_nome: cliente.nome})
     })
     .then(res=>res.json())
     .then(data=>{
@@ -283,7 +297,6 @@ function salvarOrcamento(){
     }).catch(err=>console.error(err))
 }
 </script>
-
 
 </body>
 </html>
