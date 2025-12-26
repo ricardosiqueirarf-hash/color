@@ -120,25 +120,18 @@ let cliente = {nome:"", id:null};
 let portasSalvas = [];
 let idCounter = 0;
 
-function criarFichaCliente(){
+async function criarFichaCliente(){
     const nome = document.getElementById("clienteNome").value.trim();
     if(!nome){ alert("Digite o nome do cliente"); return }
     cliente.nome = nome;
 
-    fetch('/api/orcamento', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({cliente_nome: cliente.nome})
-    })
-    .then(async res => {
-        let data;
-        try {
-            data = await res.json();
-        } catch(e){
-            console.error("Resposta não é JSON:", await res.text());
-            alert("Erro ao criar ficha: resposta inesperada do servidor");
-            return;
-        }
+    try {
+        const res = await fetch('/api/orcamento', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({cliente_nome: cliente.nome})
+        });
+        const data = await res.json();
 
         if(data.success){
             cliente.id = data.id;
@@ -149,8 +142,10 @@ function criarFichaCliente(){
         } else {
             alert("Erro ao criar ficha: "+data.error);
         }
-    })
-    .catch(err=>console.error("Erro no fetch criarFichaCliente:", err));
+    } catch(err) {
+        console.error("Erro no fetch criarFichaCliente:", err);
+        alert("Erro ao criar ficha, veja o console.");
+    }
 }
 
 // =====================
@@ -277,24 +272,21 @@ function editarPorta(id){
 // =====================
 // SALVAR ORÇAMENTO FINAL
 // =====================
-function salvarOrcamento(){
+async function salvarOrcamento(){
     if(!cliente.nome){ alert("Crie a ficha do cliente primeiro"); return }
     if(portasSalvas.length===0){ alert("Adicione pelo menos uma porta antes de salvar o orçamento"); return }
 
-    fetch('/api/orcamento', {
-        method:'POST',
-        headers:{'Content-Type':'application/json'},
-        body:JSON.stringify({cliente_nome: cliente.nome})
-    })
-    .then(async res=>{
-        let data;
-        try {
-            data = await res.json();
-        } catch(e){
-            console.error("Resposta não é JSON:", await res.text());
-            alert("Erro ao salvar orçamento: resposta inesperada do servidor");
-            return;
-        }
+    try {
+        const res = await fetch('/api/orcamento', {
+            method:'POST',
+            headers:{'Content-Type':'application/json'},
+            body:JSON.stringify({
+                cliente_nome: cliente.nome,
+                portas: portasSalvas
+            })
+        });
+        const data = await res.json();
+
         if(data.success){
             alert("Orçamento final enviado com sucesso!")
             document.getElementById("formCliente").style.display="block"
@@ -307,8 +299,10 @@ function salvarOrcamento(){
         } else {
             alert("Erro: "+data.error)
         }
-    })
-    .catch(err => console.error("Erro no fetch salvarOrcamento:", err))
+    } catch(err) {
+        console.error("Erro no fetch salvarOrcamento:", err)
+        alert("Erro ao salvar orçamento, veja o console.")
+    }
 }
 </script>
 
