@@ -1,19 +1,26 @@
-# =====================
-# API VIDROS
-# =====================
+from flask import Blueprint, request, jsonify
+import requests
 
-@app.route("/api/vidros", methods=["GET"])
-@login_required
+vidros_bp = Blueprint("vidros_bp", __name__)
+
+def calcular_preco(custo, margem, perda):
+    custo_com_perda = custo * (1 + perda / 100)
+    return custo_com_perda * (1 + margem / 100)
+
+# GET
+@vidros_bp.route("/api/vidros", methods=["GET"])
 def listar_vidros():
+    from app import SUPABASE_URL, HEADERS  # importa as chaves do app.py
     r = requests.get(f"{SUPABASE_URL}/rest/v1/vidros?select=*&order=tipo.asc", headers=HEADERS)
     r.raise_for_status()
     return jsonify(r.json())
 
-@app.route("/api/vidros", methods=["POST"])
-@login_required
+# POST
+@vidros_bp.route("/api/vidros", methods=["POST"])
 def criar_vidro():
+    from app import SUPABASE_URL, HEADERS
     data = request.json
-    preco = float(data["custo"]) * (1 + float(data["margem"])/100) * (1 + float(data["perda"])/100)
+    preco = calcular_preco(float(data["custo"]), float(data["margem"]), float(data["perda"]))
     payload = {
         "tipo": data["tipo"],
         "espessura": data["espessura"],
@@ -26,11 +33,12 @@ def criar_vidro():
     r.raise_for_status()
     return jsonify({"status": "ok"})
 
-@app.route("/api/vidros/<id>", methods=["PUT"])
-@login_required
+# PUT
+@vidros_bp.route("/api/vidros/<id>", methods=["PUT"])
 def editar_vidro(id):
+    from app import SUPABASE_URL, HEADERS
     data = request.json
-    preco = float(data["custo"]) * (1 + float(data["margem"])/100) * (1 + float(data["perda"])/100)
+    preco = calcular_preco(float(data["custo"]), float(data["margem"]), float(data["perda"]))
     payload = {
         "tipo": data["tipo"],
         "espessura": data["espessura"],
@@ -43,9 +51,11 @@ def editar_vidro(id):
     r.raise_for_status()
     return jsonify({"status": "updated"})
 
-@app.route("/api/vidros/<id>", methods=["DELETE"])
-@login_required
+# DELETE
+@vidros_bp.route("/api/vidros/<id>", methods=["DELETE"])
 def deletar_vidro(id):
+    from app import SUPABASE_URL, HEADERS
     r = requests.delete(f"{SUPABASE_URL}/rest/v1/vidros?id=eq.{id}", headers=HEADERS)
     r.raise_for_status()
     return jsonify({"status": "deleted"})
+
