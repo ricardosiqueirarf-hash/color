@@ -32,6 +32,13 @@
             width: 120px;
         }
 
+        .tipologias {
+            margin: 10px 0;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
@@ -67,6 +74,14 @@
 <input id="margem" type="number" step="0.01" placeholder="Margem %">
 <input id="perda" type="number" step="0.01" placeholder="Perda %">
 
+<h4>Tipologias compatíveis</h4>
+<div class="tipologias">
+    <label><input type="checkbox" value="giro"> Giro</label>
+    <label><input type="checkbox" value="correr"> Correr</label>
+    <label><input type="checkbox" value="deslizante"> Deslizante</label>
+    <label><input type="checkbox" value="pivotante"> Pivotante</label>
+</div>
+
 <button onclick="salvar()">Salvar</button>
 <button onclick="cancelar()">Cancelar</button>
 
@@ -78,6 +93,7 @@
             <th>Margem</th>
             <th>Perda</th>
             <th>Preço Final</th>
+            <th>Tipologias</th>
             <th>Ações</th>
         </tr>
     </thead>
@@ -102,82 +118,82 @@
                 <td>${p.margem}%</td>
                 <td>${p.perda}%</td>
                 <td><b>R$ ${Number(p.preco).toFixed(2)}</b></td>
+                <td>${(p.tipologias || []).join(", ")}</td>
                 <td>
-                    <button onclick="editar(
-                        '${p.id}',
-                        '${p.nome}',
-                        ${p.custo},
-                        ${p.margem},
-                        ${p.perda}
-                    )">Editar</button>
+                    <button onclick='editar(${JSON.stringify(p)})'>Editar</button>
                     <button onclick="excluir('${p.id}')">Excluir</button>
                 </td>
             `;
-
             tbody.appendChild(tr);
         });
     }
 
+    function getTipologiasSelecionadas() {
+        return Array.from(
+            document.querySelectorAll(".tipologias input:checked")
+        ).map(c => c.value);
+    }
+
     // 💾 SALVAR / ATUALIZAR
     async function salvar() {
-        const id = document.getElementById("perfil_id").value;
+        const id = perfil_id.value;
         const nome = document.getElementById("nome").value;
         const custo = parseFloat(document.getElementById("custo").value);
         const margem = parseFloat(document.getElementById("margem").value);
         const perda = parseFloat(document.getElementById("perda").value);
+        const tipologias = getTipologiasSelecionadas();
 
-        if (!nome || isNaN(custo) || isNaN(margem) || isNaN(perda)) {
-            alert("Preencha todos os campos corretamente");
+        if (!nome || isNaN(custo) || isNaN(margem) || isNaN(perda) || tipologias.length === 0) {
+            alert("Preencha todos os campos e selecione ao menos uma tipologia");
             return;
         }
 
-        const payload = { nome, custo, margem, perda };
+        const payload = { nome, custo, margem, perda, tipologias };
 
-        if (id) {
-            await fetch(`/api/perfis/${id}`, {
-                method: "PUT",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-        } else {
-            await fetch("/api/perfis", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(payload)
-            });
-        }
+        const url = id ? `/api/perfis/${id}` : "/api/perfis";
+        const method = id ? "PUT" : "POST";
+
+        await fetch(url, {
+            method,
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+        });
 
         cancelar();
         carregar();
     }
 
     // ✏️ EDITAR
-    function editar(id, nome, custo, margem, perda) {
-        document.getElementById("perfil_id").value = id;
-        document.getElementById("nome").value = nome;
-        document.getElementById("custo").value = custo;
-        document.getElementById("margem").value = margem;
-        document.getElementById("perda").value = perda;
+    function editar(p) {
+        perfil_id.value = p.id;
+        nome.value = p.nome;
+        custo.value = p.custo;
+        margem.value = p.margem;
+        perda.value = p.perda;
+
+        document
+            .querySelectorAll(".tipologias input")
+            .forEach(c => c.checked = p.tipologias?.includes(c.value));
     }
 
     // ❌ EXCLUIR
     async function excluir(id) {
         if (!confirm("Excluir este perfil?")) return;
 
-        await fetch(`/api/perfis/${id}`, {
-            method: "DELETE"
-        });
-
+        await fetch(`/api/perfis/${id}`, { method: "DELETE" });
         carregar();
     }
 
     // 🔄 CANCELAR
     function cancelar() {
-        document.getElementById("perfil_id").value = "";
-        document.getElementById("nome").value = "";
-        document.getElementById("custo").value = "";
-        document.getElementById("margem").value = "";
-        document.getElementById("perda").value = "";
+        perfil_id.value = "";
+        nome.value = "";
+        custo.value = "";
+        margem.value = "";
+        perda.value = "";
+        document
+            .querySelectorAll(".tipologias input")
+            .forEach(c => c.checked = false);
     }
 
     carregar();
