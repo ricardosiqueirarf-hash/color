@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <title>Perfis de Alumínio</title>
 
-    <!-- Supabase JS v2 -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -88,27 +85,10 @@
 </table>
 
 <script>
-    // 🔐 CONFIGURAÇÃO SUPABASE
-    const SUPABASE_URL = "https://hfhwvzldhgqniqnurync.supabase.co"
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmaHd2emxkaGdxbmlxbnVyeW5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1NDM0OTUsImV4cCI6MjA4MjExOTQ5NX0.onV4J9meGw8Uq0d3f39k2ZPbFAYvDwZM-duI3Zqgvec"
-
-    const supabaseclient = window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_KEY
-    );
-
     // 📦 CARREGAR PERFIS
     async function carregar() {
-        const { data, error } = await supabaseclient
-            .from("perfis")
-            .select("*")
-            .order("nome");
-
-        if (error) {
-            alert("Erro ao carregar perfis");
-            console.error(error);
-            return;
-        }
+        const res = await fetch("/api/perfis");
+        const data = await res.json();
 
         const tbody = document.getElementById("tabela");
         tbody.innerHTML = "";
@@ -118,24 +98,24 @@
 
             tr.innerHTML = `
                 <td>${p.nome}</td>
-                <td>R$ ${p.custo.toFixed(2)}</td>
+                <td>R$ ${Number(p.custo).toFixed(2)}</td>
                 <td>${p.margem}%</td>
                 <td>${p.perda}%</td>
-                <td><b>R$ ${p.preco.toFixed(2)}</b></td>
+                <td><b>R$ ${Number(p.preco).toFixed(2)}</b></td>
                 <td>
-                    <button onclick="editar('${p.id}', '${p.nome}', ${p.custo}, ${p.margem}, ${p.perda})">Editar</button>
+                    <button onclick="editar(
+                        '${p.id}',
+                        '${p.nome}',
+                        ${p.custo},
+                        ${p.margem},
+                        ${p.perda}
+                    )">Editar</button>
                     <button onclick="excluir('${p.id}')">Excluir</button>
                 </td>
             `;
 
             tbody.appendChild(tr);
         });
-    }
-
-    // 🧮 CÁLCULO DO PREÇO
-    function calcularPreco(custo, margem, perda) {
-        const custoComPerda = custo * (1 + perda / 100);
-        return custoComPerda * (1 + margem / 100);
     }
 
     // 💾 SALVAR / ATUALIZAR
@@ -151,17 +131,20 @@
             return;
         }
 
-        const preco = calcularPreco(custo, margem, perda);
+        const payload = { nome, custo, margem, perda };
 
         if (id) {
-            await supabaseclient
-                .from("perfis")
-                .update({ nome, custo, margem, perda, preco })
-                .eq("id", id);
+            await fetch(`/api/perfis/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
         } else {
-            await supabaseclient
-                .from("perfis")
-                .insert([{ nome, custo, margem, perda, preco }]);
+            await fetch("/api/perfis", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
         }
 
         cancelar();
@@ -181,10 +164,9 @@
     async function excluir(id) {
         if (!confirm("Excluir este perfil?")) return;
 
-        await supabaseclient
-            .from("perfis")
-            .delete()
-            .eq("id", id);
+        await fetch(`/api/perfis/${id}`, {
+            method: "DELETE"
+        });
 
         carregar();
     }
