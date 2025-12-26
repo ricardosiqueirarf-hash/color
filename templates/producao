@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Produção de Pedidos</title>
+<style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f9f9f9; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { border: 1px solid #ccc; padding: 10px; text-align: center; }
+    th { background-color: #333; color: #fff; }
+    select { padding: 5px; }
+</style>
+</head>
+<body>
+
+<h1>Controle de Produção</h1>
+<table id="tabelaPedidos">
+    <thead>
+        <tr>
+            <th># Pedido</th>
+            <th>Cliente</th>
+            <th>Data Criação</th>
+            <th>Situação</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr><td colspan="4">Carregando pedidos...</td></tr>
+    </tbody>
+</table>
+
+<script>
+const SITUACOES = ["orcamento", "comprado", "em produção", "produzido", "entregue"];
+
+// Carrega pedidos do Supabase
+async function carregarPedidos() {
+    try {
+        const res = await fetch('/api/orcamentos');
+        const data = await res.json();
+
+        const tbody = document.querySelector("#tabelaPedidos tbody");
+        tbody.innerHTML = "";
+
+        if (!data.orcamentos || data.orcamentos.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="4"><em>Nenhum pedido encontrado.</em></td></tr>';
+            return;
+        }
+
+        data.orcamentos.forEach(pedido => {
+            const tr = document.createElement("tr");
+
+            const dataCriacao = pedido.data_criacao ? new Date(pedido.data_criacao).toLocaleString() : "";
+
+            // Colunas básicas
+            tr.innerHTML = `
+                <td>${pedido.numero_pedido}</td>
+                <td>${pedido.cliente_nome}</td>
+                <td>${dataCriacao}</td>
+            `;
+
+            // Coluna de situação
+            const tdSituacao = document.createElement("td");
+            const select = document.createElement("select");
+            SITUACOES.forEach(s => {
+                const option = document.createElement("option");
+                option.value = s;
+                option.textContent = s;
+                if (pedido.situacao === s) option.selected = true;
+                select.appendChild(option);
+            });
+            select.onchange = () => atualizarSituacao(pedido.id, select.value);
+            tdSituacao.appendChild(select);
+            tr.appendChild(tdSituacao);
+
+            tbody.appendChild(tr);
+        });
+
+    } catch (err) {
+        console.error("Erro ao carregar pedidos:", err);
+        const tbody = document.querySelector("#tabelaPedidos tbody");
+        tbody.innerHTML = '<tr><td colspan="4"><em>Erro ao carregar pedidos.</em></td></tr>';
+    }
+}
+
+// Atualiza situação no backend
+async function atualizarSituacao(id, situacao) {
+    try {
+        const res = await fetch(`/api/orcamento/${id}`, {
+            method: 'PATCH',
+            headers: {'Content-Type':'application/json'},
+            body: JSON.stringify({situacao})
+        });
+        const data = await res.json();
+        if (!data.success) {
+            alert("Erro ao atualizar situação: " + data.error);
+        }
+    } catch(err) {
+        console.error("Erro no fetch atualizarSituacao:", err);
+        alert("Erro ao atualizar situação, veja o console.");
+    }
+}
+
+// Inicializar tabela
+carregarPedidos();
+</script>
+
+</body>
+</html>
