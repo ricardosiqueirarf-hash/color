@@ -127,7 +127,7 @@ def criar_perfil():
         "margem": data["margem"],
         "perda": data["perda"],
         "preco": round(preco, 2),
-        "tipologia": data.get("tipologias", [])  # 👈 AQUI
+        "tipologias": data.get("tipologias", [])  # 👈 AQUI
     }
 
     r = requests.post(
@@ -155,7 +155,7 @@ def editar_perfil(id):
         "margem": data["margem"],
         "perda": data["perda"],
         "preco": round(preco, 2),
-        "tipologia": data.get("tipologias", [])  # 👈 AQUI TAMBÉM
+        "tipologias": data.get("tipologias", [])  # 👈 AQUI TAMBÉM
     }
 
     r = requests.patch(
