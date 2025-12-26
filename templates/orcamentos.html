@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gerador de Portas</title>
+<style>
+body { margin:0; font-family:Arial, Helvetica, sans-serif; background:#f2f2f2; }
+.container { max-width:900px; margin:20px auto; background:white; padding:20px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+h1,h2 { margin-top:0; }
+.row { display:flex; gap:15px; flex-wrap:wrap; margin-top:10px; }
+label { display:flex; flex-direction:column; font-size:0.9rem; width:180px; }
+input, select { padding:7px; margin-top:5px; }
+.btn { padding:10px 16px; border:none; border-radius:6px; cursor:pointer; background:#0078d7; color:white; margin-top:10px; }
+.btn-danger { background:#c0392b; }
+#campos { display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }
+#portasSalvas div { margin-bottom:10px; border:1px solid #333; padding:10px; background:#f0f0f0; }
+svg { border:1px solid #000; margin-top:10px; }
+</style>
+</head>
+<body>
+
+<div class="container">
+  <button class="btn btn-danger" onclick="history.back()">Voltar</button>
+    <h1>Gerador de Portas</h1>
+
+    <label>
+        Tipologia
+        <select id="tipologia" onchange="renderCampos()">
+            <option value="">Selecione</option>
+            <option value="giro">Porta de Giro</option>
+            <option value="deslizante">Porta Deslizante</option>
+            <option value="correr">Porta de Correr</option>
+            <option value="pivotante">Porta Pivotante</option>
+        </select>
+    </label>
+
+    <div id="campos"></div>
+
+    <svg id="portaSVG" width="200" height="400"></svg>
+
+    <button class="btn" onclick="salvarPorta()">Salvar Porta</button>
+
+    <h2>Portas Salvas</h2>
+    <div id="portasSalvas"></div>
+
+    <button class="btn" onclick="salvarOrcamento()">Salvar Orçamento Final</button>
+</div>
+
+<script>
+const TIPOLOGIAS = {
+    giro: ["largura","altura","perfil","vidro","dobradica"],
+    deslizante: ["largura","altura","perfil","vidro","trilho","qtd_folhas"],
+    correr: ["largura","altura","perfil","vidro","trilho","qtd_folhas"],
+    pivotante: ["largura","altura","perfil","vidro","pivo"]
+};
+
+let portasSalvas = [];
+let idCounter = 0;
+let portaEditandoId = null;
+
+function renderCampos(){
+    const tipo = document.getElementById("tipologia").value;
+    const container = document.getElementById("campos");
+    container.innerHTML = "";
+    if(!TIPOLOGIAS[tipo]) return;
+
+    TIPOLOGIAS[tipo].forEach(c=>{
+        const label = document.createElement("label");
+        switch(c){
+            case "largura": label.innerHTML=`Largura (mm)<input type="number" id="largura" value="800" oninput="desenharPorta()">`; break;
+            case "altura": label.innerHTML=`Altura (mm)<input type="number" id="altura" value="2000" oninput="desenharPorta()">`; break;
+            case "perfil": label.innerHTML=`Perfil<select id="perfil"><option>Padrão</option></select>`; break;
+            case "vidro": label.innerHTML=`Vidro<select id="vidro"><option>Padrão</option></select>`; break;
+            case "trilho": label.innerHTML=`Trilho<select id="trilho"><option>Padrão</option></select>`; break;
+            case "qtd_folhas": label.innerHTML=`Qtd Folhas<input type="number" id="qtd_folhas" value="2" oninput="desenharPorta()">`; break;
+            case "dobradica": label.innerHTML=`Dobradiça<select id="dobradica"><option>Padrão</option></select>`; break;
+            case "pivo": label.innerHTML=`Pivô<select id="pivo"><option>Superior</option></select>`; break;
+        }
+        container.appendChild(label);
+    });
+    desenharPorta();
+}
+
+function desenharPorta(){
+    const larguraInput = document.getElementById("largura");
+    const alturaInput = document.getElementById("altura");
+    const svg = document.getElementById("portaSVG");
+    if(!larguraInput||!alturaInput||!svg) return;
+
+    const largura = parseFloat(larguraInput.value);
+    const altura = parseFloat(alturaInput.value);
+    svg.innerHTML='';
+    const maxSVGWidth=svg.clientWidth;
+    const maxSVGHeight=svg.clientHeight;
+    const padding=10;
+    const scale=Math.min((maxSVGWidth-2*padding)/largura,(maxSVGHeight-2*padding)/altura);
+    const rectWidth=largura*scale;
+    const rectHeight=altura*scale;
+    const rect=document.createElementNS("http://www.w3.org/2000/svg","rect");
+    rect.setAttribute("x",(maxSVGWidth-rectWidth)/2);
+    rect.setAttribute("y",(maxSVGHeight-rectHeight)/2);
+    rect.setAttribute("width",rectWidth);
+    rect.setAttribute("height",rectHeight);
+    rect.setAttribute("fill","#ccc");
+    rect.setAttribute("stroke","#000");
+    rect.setAttribute("stroke-width","6");
+    rect.setAttribute("vector-effect","non-scaling-stroke");
+    svg.appendChild(rect);
+}
+
+function salvarPorta(){
+    const tipologia=document.getElementById("tipologia").value;
+    if(!tipologia){ alert("Selecione tipologia"); return }
+
+    const dados = {};
+    TIPOLOGIAS[tipologia].forEach(c=>{
+        const el=document.getElementById(c);
+        if(el) dados[c]=el.value;
+    });
+
+    const svg = document.getElementById("portaSVG").outerHTML;
+
+    if(portaEditandoId!==null){
+        const porta=portasSalvas.find(p=>p.id===portaEditandoId);
+        if(porta){ porta.tipologia=tipologia; porta.dados=dados; porta.svg=svg; }
+        portaEditandoId=null;
+    } else {
+        const id=idCounter++;
+        portasSalvas.push({id,tipologia,dados,svg});
+    }
+    renderPortasSalvas();
+}
+
+function renderPortasSalvas(){
+    const container=document.getElementById("portasSalvas");
+    container.innerHTML="";
+    portasSalvas.forEach(p=>{
+        const div=document.createElement("div");
+        let info=`<strong>Porta ${p.id} - ${p.tipologia}</strong><br>`;
+        for(let k in p.dados) info+=`${k}: ${p.dados[k]}<br>`;
+        div.innerHTML=info+p.svg;
+
+        const btnEditar=document.createElement("button");
+        btnEditar.textContent="Editar";
+        btnEditar.className="btn";
+        btnEditar.style.marginTop="5px";
+        btnEditar.onclick=()=>editarPorta(p.id);
+        div.appendChild(btnEditar);
+
+        container.appendChild(div);
+    });
+}
+
+function editarPorta(id){
+    const porta=portasSalvas.find(p=>p.id===id);
+    if(!porta) return;
+    portaEditandoId=id;
+    document.getElementById("tipologia").value=porta.tipologia;
+    renderCampos();
+    TIPOLOGIAS[porta.tipologia].forEach(c=>{
+        const el=document.getElementById(c);
+        if(el) el.value=porta.dados[c];
+    });
+    desenharPorta();
+}
+
+function salvarOrcamento(){
+    if(portasSalvas.length===0){ alert("Nenhuma porta para salvar!"); return; }
+    console.log("Orçamento salvo:", portasSalvas);
+    alert("Orçamento final salvo! Veja o console para detalhes.");
+}
+</script>
+
+</body>
+</html>
