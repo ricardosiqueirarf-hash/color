@@ -78,6 +78,11 @@ def vidros_page():
 def admin_page():
     return render_template("admin.html")
 
+@app.route("/producao-page")
+@login_required
+def producao_page():
+    return render_template("producao.html")
+
 # =====================
 # LOGIN
 # =====================
