@@ -82,7 +82,10 @@ function carregarOrcamentos() {
     .then(data => {
         const container = document.getElementById("orcamentosExistentes");
         container.innerHTML = "";
-        if(!data.success || !data.orcamentos || data.orcamentos.length===0){
+
+        // Se o endpoint retornar {success:true, orcamentos: [...]}
+        const orcamentos = data.orcamentos || [];
+        if(orcamentos.length === 0){
             container.innerHTML = "<em>Nenhum orçamento encontrado.</em>";
             return;
         }
@@ -93,7 +96,7 @@ function carregarOrcamentos() {
         table.appendChild(thead);
 
         const tbody = document.createElement("tbody");
-        data.orcamentos.forEach(o => {
+        orcamentos.forEach(o => {
             const tr = document.createElement("tr");
             const dataCriacao = o.data_criacao ? new Date(o.data_criacao).toLocaleString() : "";
             tr.innerHTML = `<td>${o.numero_pedido}</td><td>${o.cliente_nome}</td><td>${dataCriacao}</td>`;
