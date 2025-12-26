@@ -82,14 +82,9 @@ def admin_page():
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        username = request.form.get("username")
-        password = request.form.get("password")
-
-        if username == "kadumon" and password == "17241804":
+        if request.form.get("username") == "kadumon" and request.form.get("password") == "17241804":
             session["logged_in"] = True
-            next_page = request.args.get("next")
-            return redirect(next_page or url_for("index"))
-
+            return redirect(request.args.get("next") or url_for("index"))
         return render_template("login.html", error="Usuário ou senha inválidos")
 
     return render_template("login.html")
@@ -131,7 +126,8 @@ def criar_perfil():
         "custo": data["custo"],
         "margem": data["margem"],
         "perda": data["perda"],
-        "preco": round(preco, 2)
+        "preco": round(preco, 2),
+        "tipologias": data.get("tipologias", [])  # 👈 AQUI
     }
 
     r = requests.post(
@@ -158,7 +154,8 @@ def editar_perfil(id):
         "custo": data["custo"],
         "margem": data["margem"],
         "perda": data["perda"],
-        "preco": round(preco, 2)
+        "preco": round(preco, 2),
+        "tipologias": data.get("tipologias", [])  # 👈 AQUI TAMBÉM
     }
 
     r = requests.patch(
@@ -179,7 +176,7 @@ def deletar_perfil(id):
     return jsonify({"status": "deleted"}), r.status_code
 
 # =====================
-# API VIDROS
+# API VIDROS (inalterado)
 # =====================
 
 @app.route("/api/vidros", methods=["GET"])
