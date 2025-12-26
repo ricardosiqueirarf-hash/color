@@ -199,7 +199,7 @@ def deletar_vidro(id):
     return jsonify({"status": "deleted"}), r.status_code
 
 # =====================
-# API ORÇAMENTO
+# API ORÇAMENTOS
 # =====================
 
 @app.route("/api/orcamento", methods=["POST"])
@@ -212,16 +212,13 @@ def criar_orcamento():
     if not cliente_nome:
         return jsonify({"success": False, "error": "Cliente não informado"}), 400
 
-    # Buscar o último número de pedido
+    # Buscar último número de pedido
     r_last = requests.get(f"{SUPABASE_URL}/rest/v1/orcamentos?select=numero_pedido&order=numero_pedido.desc&limit=1", headers=HEADERS)
     last_pedido = r_last.json()
     numero_pedido = (last_pedido[0]['numero_pedido'] + 1) if last_pedido else 1
 
     # Criar orçamento
-    payload = {
-        "cliente_nome": cliente_nome,
-        "numero_pedido": numero_pedido
-    }
+    payload = {"cliente_nome": cliente_nome, "numero_pedido": numero_pedido}
     r = requests.post(f"{SUPABASE_URL}/rest/v1/orcamentos", headers=HEADERS, json=payload)
     if r.status_code not in [200,201]:
         return jsonify({"success": False, "error": "Erro ao criar orçamento"}), r.status_code
@@ -245,12 +242,22 @@ def criar_orcamento():
         if r_portas.status_code not in [200,201]:
             return jsonify({"success": False, "error": "Erro ao salvar portas"}), r_portas.status_code
 
-    return jsonify({
-        "success": True,
-        "id": orcamento_id,
-        "numero_pedido": numero_pedido,
-        "cliente_nome": cliente_nome
-    })
+    return jsonify({"success": True, "id": orcamento_id, "numero_pedido": numero_pedido, "cliente_nome": cliente_nome})
+
+# =====================
+# NOVO ENDPOINT GET ORÇAMENTOS
+# =====================
+
+@app.route("/api/orcamentos", methods=["GET"])
+@login_required
+def listar_orcamentos():
+    try:
+        r = requests.get(f"{SUPABASE_URL}/rest/v1/orcamentos?select=id,numero_pedido,cliente_nome,created_at&order=numero_pedido.asc", headers=HEADERS)
+        if r.status_code != 200:
+            return jsonify({"success": False, "error": "Erro ao buscar orçamentos"}), r.status_code
+        return jsonify({"success": True, "orcamentos": r.json()})
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 # =====================
 # START
@@ -258,4 +265,5 @@ def criar_orcamento():
 
 if __name__ == "__main__":
     app.run()
+
 
