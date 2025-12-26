@@ -90,7 +90,7 @@ def insumos_page():
 
 @app.route("/orcamentos-page")
 @login_required
-def insumos_page():
+def orcamentos_page():
     return render_template("orcamentos.html")
 
 # =====================
