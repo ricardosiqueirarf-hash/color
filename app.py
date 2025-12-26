@@ -79,7 +79,7 @@ def admin_page():
     return render_template("admin.html")
 
 # =====================
-# LOGIN (ÚNICA PÁGINA PÚBLICA)
+# LOGIN
 # =====================
 
 @app.route("/login", methods=["GET", "POST"])
@@ -87,13 +87,10 @@ def login():
     if request.method == "POST":
         username = request.form.get("username")
         password = request.form.get("password")
-
         if username == "kadumon" and password == "17241804":
             session["logged_in"] = True
             return redirect(request.args.get("next") or url_for("index"))
-
         return render_template("login.html", error="Usuário ou senha inválidos")
-
     return render_template("login.html")
 
 @app.route("/logout")
@@ -112,10 +109,7 @@ def check_session():
 @app.route("/api/perfis", methods=["GET"])
 @login_required
 def listar_perfis():
-    r = requests.get(
-        f"{SUPABASE_URL}/rest/v1/perfis?select=*&order=nome.asc",
-        headers=HEADERS
-    )
+    r = requests.get(f"{SUPABASE_URL}/rest/v1/perfis?select=*&order=nome.asc", headers=HEADERS)
     return jsonify(r.json()), r.status_code
 
 @app.route("/api/perfis", methods=["POST"])
@@ -131,11 +125,7 @@ def criar_perfil():
         "preco": round(preco, 2),
         "tipologias": data.get("tipologias", [])
     }
-    r = requests.post(
-        f"{SUPABASE_URL}/rest/v1/perfis",
-        headers=HEADERS,
-        json=payload
-    )
+    r = requests.post(f"{SUPABASE_URL}/rest/v1/perfis", headers=HEADERS, json=payload)
     return jsonify({"status": "ok"}), r.status_code
 
 @app.route("/api/perfis/<id>", methods=["PUT"])
@@ -151,20 +141,13 @@ def editar_perfil(id):
         "preco": round(preco, 2),
         "tipologias": data.get("tipologias", [])
     }
-    r = requests.patch(
-        f"{SUPABASE_URL}/rest/v1/perfis?id=eq.{id}",
-        headers=HEADERS,
-        json=payload
-    )
+    r = requests.patch(f"{SUPABASE_URL}/rest/v1/perfis?id=eq.{id}", headers=HEADERS, json=payload)
     return jsonify({"status": "updated"}), r.status_code
 
 @app.route("/api/perfis/<id>", methods=["DELETE"])
 @login_required
 def deletar_perfil(id):
-    r = requests.delete(
-        f"{SUPABASE_URL}/rest/v1/perfis?id=eq.{id}",
-        headers=HEADERS
-    )
+    r = requests.delete(f"{SUPABASE_URL}/rest/v1/perfis?id=eq.{id}", headers=HEADERS)
     return jsonify({"status": "deleted"}), r.status_code
 
 # =====================
@@ -174,10 +157,7 @@ def deletar_perfil(id):
 @app.route("/api/vidros", methods=["GET"])
 @login_required
 def listar_vidros():
-    r = requests.get(
-        f"{SUPABASE_URL}/rest/v1/vidros?select=*&order=tipo.asc",
-        headers=HEADERS
-    )
+    r = requests.get(f"{SUPABASE_URL}/rest/v1/vidros?select=*&order=tipo.asc", headers=HEADERS)
     return jsonify(r.json()), r.status_code
 
 @app.route("/api/vidros", methods=["POST"])
@@ -193,11 +173,7 @@ def criar_vidro():
         "perda": data["perda"],
         "preco": round(preco, 2)
     }
-    r = requests.post(
-        f"{SUPABASE_URL}/rest/v1/vidros",
-        headers=HEADERS,
-        json=payload
-    )
+    r = requests.post(f"{SUPABASE_URL}/rest/v1/vidros", headers=HEADERS, json=payload)
     return jsonify({"status": "ok"}), r.status_code
 
 @app.route("/api/vidros/<id>", methods=["PUT"])
@@ -213,24 +189,17 @@ def editar_vidro(id):
         "perda": data["perda"],
         "preco": round(preco, 2)
     }
-    r = requests.patch(
-        f"{SUPABASE_URL}/rest/v1/vidros?id=eq.{id}",
-        headers=HEADERS,
-        json=payload
-    )
+    r = requests.patch(f"{SUPABASE_URL}/rest/v1/vidros?id=eq.{id}", headers=HEADERS, json=payload)
     return jsonify({"status": "updated"}), r.status_code
 
 @app.route("/api/vidros/<id>", methods=["DELETE"])
 @login_required
 def deletar_vidro(id):
-    r = requests.delete(
-        f"{SUPABASE_URL}/rest/v1/vidros?id=eq.{id}",
-        headers=HEADERS
-    )
+    r = requests.delete(f"{SUPABASE_URL}/rest/v1/vidros?id=eq.{id}", headers=HEADERS)
     return jsonify({"status": "deleted"}), r.status_code
 
 # =====================
-# API ORÇAMENTO E PORTAS
+# API ORÇAMENTO
 # =====================
 
 @app.route("/api/orcamento", methods=["POST"])
@@ -243,14 +212,17 @@ def criar_orcamento():
     if not cliente_nome:
         return jsonify({"success": False, "error": "Cliente não informado"}), 400
 
-    # Criar orçamento
-    payload = {"cliente_nome": cliente_nome}
-    r = requests.post(
-        f"{SUPABASE_URL}/rest/v1/orcamentos",
-        headers=HEADERS,
-        json=payload
-    )
+    # Buscar o último número de pedido
+    r_last = requests.get(f"{SUPABASE_URL}/rest/v1/orcamentos?select=numero_pedido&order=numero_pedido.desc&limit=1", headers=HEADERS)
+    last_pedido = r_last.json()
+    numero_pedido = (last_pedido[0]['numero_pedido'] + 1) if last_pedido else 1
 
+    # Criar orçamento
+    payload = {
+        "cliente_nome": cliente_nome,
+        "numero_pedido": numero_pedido
+    }
+    r = requests.post(f"{SUPABASE_URL}/rest/v1/orcamentos", headers=HEADERS, json=payload)
     if r.status_code not in [200,201]:
         return jsonify({"success": False, "error": "Erro ao criar orçamento"}), r.status_code
 
@@ -259,7 +231,7 @@ def criar_orcamento():
     if not orcamento_id:
         return jsonify({"success": False, "error": "Não retornou ID do orçamento"}), 500
 
-    # Criar portas vinculadas
+    # Salvar portas vinculadas ao orçamento
     portas_payload = []
     for p in portas:
         portas_payload.append({
@@ -268,17 +240,17 @@ def criar_orcamento():
             "dados": p.get("dados"),
             "svg": p.get("svg")
         })
-
     if portas_payload:
-        r_portas = requests.post(
-            f"{SUPABASE_URL}/rest/v1/portas",
-            headers=HEADERS,
-            json=portas_payload
-        )
+        r_portas = requests.post(f"{SUPABASE_URL}/rest/v1/portas", headers=HEADERS, json=portas_payload)
         if r_portas.status_code not in [200,201]:
             return jsonify({"success": False, "error": "Erro ao salvar portas"}), r_portas.status_code
 
-    return jsonify({"success": True, "id": orcamento_id})
+    return jsonify({
+        "success": True,
+        "id": orcamento_id,
+        "numero_pedido": numero_pedido,
+        "cliente_nome": cliente_nome
+    })
 
 # =====================
 # START
