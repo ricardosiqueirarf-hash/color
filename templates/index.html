@@ -268,42 +268,6 @@ function editarPorta(id){
     })
     desenharPorta()
 }
-
-// =====================
-// SALVAR ORÇAMENTO FINAL
-// =====================
-async function salvarOrcamento(){
-    if(!cliente.nome){ alert("Crie a ficha do cliente primeiro"); return }
-    if(portasSalvas.length===0){ alert("Adicione pelo menos uma porta antes de salvar o orçamento"); return }
-
-    try {
-        const res = await fetch('/api/orcamento', {
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({
-                cliente_nome: cliente.nome,
-                portas: portasSalvas
-            })
-        });
-        const data = await res.json();
-
-        if(data.success){
-            alert("Orçamento final enviado com sucesso!")
-            document.getElementById("formCliente").style.display="block"
-            document.getElementById("formPorta").style.display="none"
-            document.getElementById("clienteNome").value=""
-            portasSalvas=[]
-            idCounter=0
-            document.getElementById("portasSalvas").innerHTML=""
-            carregarOrcamentos()
-        } else {
-            alert("Erro: "+data.error)
-        }
-    } catch(err) {
-        console.error("Erro no fetch salvarOrcamento:", err)
-        alert("Erro ao salvar orçamento, veja o console.")
-    }
-}
 </script>
 
 </body>
