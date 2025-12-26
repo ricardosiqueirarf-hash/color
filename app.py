@@ -159,7 +159,6 @@ def deletar_perfil(id):
 # =====================
 
 @app.route("/api/orcamento", methods=["POST"])
-@login_required
 def criar_orcamento():
     data = request.json
     cliente_nome = data.get("cliente_nome")
@@ -184,7 +183,6 @@ def criar_orcamento():
 
 
 @app.route("/api/orcamentos", methods=["GET"])
-@login_required
 def listar_orcamentos():
     try:
         r = requests.get(
