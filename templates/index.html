@@ -64,7 +64,7 @@ input, select {
 .btn-danger {
     background: #c0392b;
 }
-#formPorta {
+#formPorta, #formCliente {
     background: white;
     padding: 15px;
     border-radius: 8px;
@@ -92,7 +92,14 @@ input, select {
     <div class="content">
         <h1>Orçamento de Portas</h1>
 
-        <div id="formPorta">
+        <!-- FORMULÁRIO FICHA DO CLIENTE -->
+        <div id="formCliente">
+            <label>Nome do Cliente<input type="text" id="clienteNome"></label>
+            <button class="btn" onclick="criarFichaCliente()">Criar Ficha</button>
+        </div>
+
+        <!-- FORMULÁRIO PORTA -->
+        <div id="formPorta" style="display:none;">
             <label>
                 Tipologia
                 <select id="tipologia" onchange="renderCampos()">
@@ -113,11 +120,39 @@ input, select {
 
         <h2>Portas Salvas</h2>
         <div id="portasSalvas"></div>
+
+        <button class="btn" onclick="salvarOrcamento()" style="margin-top:20px;">Salvar Orçamento Final</button>
     </div>
 </div>
 
 <script>
 function go(p){ window.location.href = p }
+
+// Ficha do cliente
+let cliente = {nome:""};
+function criarFichaCliente(){
+    const nome = document.getElementById("clienteNome").value.trim()
+    if(!nome){ alert("Digite o nome do cliente"); return }
+    cliente.nome = nome
+
+    // Envia os dados para o backend
+    fetch('/api/orcamento', {
+        method: 'POST',
+        headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({cliente_nome: cliente.nome})
+    })
+    .then(res => res.json())
+    .then(data => {
+        if(data.success){
+            alert("Ficha do cliente criada com sucesso! ID do orçamento: " + data.id)
+            document.getElementById("formCliente").style.display = "none"
+            document.getElementById("formPorta").style.display = "block"
+        } else {
+            alert("Erro ao criar ficha: " + data.error)
+        }
+    })
+    .catch(err => console.error(err))
+}
 
 // Tipologias
 const TIPOLOGIAS = {
@@ -163,7 +198,7 @@ function renderCampos(){
         }
         container.appendChild(label)
     })
-    desenharPorta() // desenha automaticamente ao criar os campos
+    desenharPorta()
 }
 
 // Desenho da porta
@@ -262,6 +297,24 @@ function editarPorta(id){
         if(el) el.value = porta.dados[c]
     })
     desenharPorta()
+}
+
+// Salvar orçamento final (local)
+function salvarOrcamento(){
+    if(!cliente.nome){ alert("Crie a ficha do cliente primeiro"); return }
+    if(portasSalvas.length===0){ alert("Adicione pelo menos uma porta antes de salvar o orçamento"); return }
+
+    console.log("Orçamento salvo para o cliente:", cliente.nome)
+    console.log("Portas:", portasSalvas)
+    alert("Orçamento salvo localmente (ainda não enviado ao Supabase)")
+
+    // Resetar formulário se quiser iniciar novo orçamento
+    document.getElementById("formCliente").style.display = "block"
+    document.getElementById("formPorta").style.display = "none"
+    document.getElementById("clienteNome").value = ""
+    portasSalvas = []
+    idCounter = 0
+    document.getElementById("portasSalvas").innerHTML = ""
 }
 </script>
 
