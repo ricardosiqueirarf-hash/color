@@ -118,18 +118,11 @@ def listar_perfis():
     )
     return jsonify(r.json()), r.status_code
 
-
 @app.route("/api/perfis", methods=["POST"])
 @login_required
 def criar_perfil():
     data = request.json
-
-    preco = calcular_preco(
-        float(data["custo"]),
-        float(data["margem"]),
-        float(data["perda"])
-    )
-
+    preco = calcular_preco(float(data["custo"]), float(data["margem"]), float(data["perda"]))
     payload = {
         "nome": data["nome"],
         "custo": data["custo"],
@@ -138,27 +131,18 @@ def criar_perfil():
         "preco": round(preco, 2),
         "tipologias": data.get("tipologias", [])
     }
-
     r = requests.post(
         f"{SUPABASE_URL}/rest/v1/perfis",
         headers=HEADERS,
         json=payload
     )
-
     return jsonify({"status": "ok"}), r.status_code
-
 
 @app.route("/api/perfis/<id>", methods=["PUT"])
 @login_required
 def editar_perfil(id):
     data = request.json
-
-    preco = calcular_preco(
-        float(data["custo"]),
-        float(data["margem"]),
-        float(data["perda"])
-    )
-
+    preco = calcular_preco(float(data["custo"]), float(data["margem"]), float(data["perda"]))
     payload = {
         "nome": data["nome"],
         "custo": data["custo"],
@@ -167,15 +151,12 @@ def editar_perfil(id):
         "preco": round(preco, 2),
         "tipologias": data.get("tipologias", [])
     }
-
     r = requests.patch(
         f"{SUPABASE_URL}/rest/v1/perfis?id=eq.{id}",
         headers=HEADERS,
         json=payload
     )
-
     return jsonify({"status": "updated"}), r.status_code
-
 
 @app.route("/api/perfis/<id>", methods=["DELETE"])
 @login_required
@@ -199,18 +180,11 @@ def listar_vidros():
     )
     return jsonify(r.json()), r.status_code
 
-
 @app.route("/api/vidros", methods=["POST"])
 @login_required
 def criar_vidro():
     data = request.json
-
-    preco = calcular_preco(
-        float(data["custo"]),
-        float(data["margem"]),
-        float(data["perda"])
-    )
-
+    preco = calcular_preco(float(data["custo"]), float(data["margem"]), float(data["perda"]))
     payload = {
         "tipo": data["tipo"],
         "espessura": data["espessura"],
@@ -219,27 +193,18 @@ def criar_vidro():
         "perda": data["perda"],
         "preco": round(preco, 2)
     }
-
     r = requests.post(
         f"{SUPABASE_URL}/rest/v1/vidros",
         headers=HEADERS,
         json=payload
     )
-
     return jsonify({"status": "ok"}), r.status_code
-
 
 @app.route("/api/vidros/<id>", methods=["PUT"])
 @login_required
 def editar_vidro(id):
     data = request.json
-
-    preco = calcular_preco(
-        float(data["custo"]),
-        float(data["margem"]),
-        float(data["perda"])
-    )
-
+    preco = calcular_preco(float(data["custo"]), float(data["margem"]), float(data["perda"]))
     payload = {
         "tipo": data["tipo"],
         "espessura": data["espessura"],
@@ -248,15 +213,12 @@ def editar_vidro(id):
         "perda": data["perda"],
         "preco": round(preco, 2)
     }
-
     r = requests.patch(
         f"{SUPABASE_URL}/rest/v1/vidros?id=eq.{id}",
         headers=HEADERS,
         json=payload
     )
-
     return jsonify({"status": "updated"}), r.status_code
-
 
 @app.route("/api/vidros/<id>", methods=["DELETE"])
 @login_required
@@ -268,8 +230,60 @@ def deletar_vidro(id):
     return jsonify({"status": "deleted"}), r.status_code
 
 # =====================
+# API ORÇAMENTO E PORTAS
+# =====================
+
+@app.route("/api/orcamento", methods=["POST"])
+@login_required
+def criar_orcamento():
+    data = request.json
+    cliente_nome = data.get("cliente_nome")
+    portas = data.get("portas", [])
+
+    if not cliente_nome:
+        return jsonify({"success": False, "error": "Cliente não informado"}), 400
+
+    # Criar orçamento
+    payload = {"cliente_nome": cliente_nome}
+    r = requests.post(
+        f"{SUPABASE_URL}/rest/v1/orcamentos",
+        headers=HEADERS,
+        json=payload
+    )
+
+    if r.status_code not in [200,201]:
+        return jsonify({"success": False, "error": "Erro ao criar orçamento"}), r.status_code
+
+    orcamento = r.json()
+    orcamento_id = orcamento[0]["id"] if isinstance(orcamento, list) and len(orcamento) > 0 else None
+    if not orcamento_id:
+        return jsonify({"success": False, "error": "Não retornou ID do orçamento"}), 500
+
+    # Criar portas vinculadas
+    portas_payload = []
+    for p in portas:
+        portas_payload.append({
+            "orcamento_id": orcamento_id,
+            "tipologia": p.get("tipologia"),
+            "dados": p.get("dados"),
+            "svg": p.get("svg")
+        })
+
+    if portas_payload:
+        r_portas = requests.post(
+            f"{SUPABASE_URL}/rest/v1/portas",
+            headers=HEADERS,
+            json=portas_payload
+        )
+        if r_portas.status_code not in [200,201]:
+            return jsonify({"success": False, "error": "Erro ao salvar portas"}), r_portas.status_code
+
+    return jsonify({"success": True, "id": orcamento_id})
+
+# =====================
 # START
 # =====================
 
 if __name__ == "__main__":
     app.run()
+
