@@ -86,14 +86,17 @@ function carregarOrcamentos() {
             container.innerHTML = "<em>Nenhum orçamento encontrado.</em>";
             return;
         }
+
         const table = document.createElement("table");
         const thead = document.createElement("thead");
         thead.innerHTML = `<tr><th># Pedido</th><th>Cliente</th><th>Data Criação</th></tr>`;
         table.appendChild(thead);
+
         const tbody = document.createElement("tbody");
-        data.orcamentos.forEach(o=>{
+        data.orcamentos.forEach(o => {
             const tr = document.createElement("tr");
-            tr.innerHTML = `<td>${o.numero_pedido}</td><td>${o.cliente_nome}</td><td>${new Date(o.created_at).toLocaleString()}</td>`;
+            const dataCriacao = o.data_criacao ? new Date(o.data_criacao).toLocaleString() : "";
+            tr.innerHTML = `<td>${o.numero_pedido}</td><td>${o.cliente_nome}</td><td>${dataCriacao}</td>`;
             tbody.appendChild(tr);
         });
         table.appendChild(tbody);
@@ -115,6 +118,7 @@ function criarFichaCliente(){
     const nome = document.getElementById("clienteNome").value.trim();
     if(!nome){ alert("Digite o nome do cliente"); return }
     cliente.nome = nome;
+
     fetch('/api/orcamento', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
@@ -124,7 +128,7 @@ function criarFichaCliente(){
     .then(data=>{
         if(data.success){
             cliente.id = data.id;
-            alert("Ficha criada com sucesso! ID: "+data.id)
+            alert("Ficha criada com sucesso! ID: "+data.id);
             document.getElementById("formCliente").style.display="none";
             document.getElementById("formPorta").style.display="block";
         } else {
@@ -139,12 +143,14 @@ const TIPOLOGIAS = {
     deslizante: ["largura","altura","perfil","vidro","trilho","qtd_folhas"],
     correr: ["largura","altura","perfil","vidro","trilho","qtd_folhas"],
     pivotante: ["largura","altura","perfil","vidro","pivo"]
-}
+};
+
 function renderCampos(){
     const tipo = document.getElementById("tipologia").value;
     const container = document.getElementById("campos");
     container.innerHTML = "";
     if(!TIPOLOGIAS[tipo]) return;
+
     TIPOLOGIAS[tipo].forEach(c=>{
         const label = document.createElement("label");
         switch(c){
@@ -168,6 +174,7 @@ function desenharPorta(){
     const alturaInput = document.getElementById("altura")
     const svg = document.getElementById("portaSVG")
     if(!larguraInput||!alturaInput||!svg) return
+
     const largura = parseFloat(larguraInput.value)
     const altura = parseFloat(alturaInput.value)
     svg.innerHTML=''
@@ -267,10 +274,13 @@ function salvarOrcamento(){
             idCounter=0
             document.getElementById("portasSalvas").innerHTML=""
             carregarOrcamentos()
-        } else { alert("Erro: "+data.error) }
+        } else { 
+            alert("Erro: "+data.error)
+        }
     }).catch(err=>console.error(err))
 }
 </script>
+
 
 </body>
 </html>
