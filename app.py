@@ -85,7 +85,7 @@ def producao_page():
 
 @app.route("/insumos-page")
 @login_required
-def producao_page():
+def insumos_page():
     return render_template("insumos.html")
 
 # =====================
