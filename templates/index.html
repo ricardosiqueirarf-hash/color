@@ -1,153 +1,244 @@
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, height=device-height, initial-scale=1.0">
-    <title>Orçamento de Portas</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Orçamento de Portas</title>
 
-    <style>
-        * {
-            box-sizing: border-box;
-            font-family: Arial, Helvetica, sans-serif;
-        }
+<style>
+    body {
+        margin: 0;
+        font-family: Arial, Helvetica, sans-serif;
+        background: #f2f2f2;
+    }
 
-        html, body {
-            width: 100%;
-            height: 100%;
-            margin: 0;
-            background-color: #f2f2f2;
-        }
+    .app {
+        display: grid;
+        grid-template-columns: 18% 82%;
+        height: 100vh;
+    }
 
-        .app {
-            width: 100vw;
-            height: 100vh;
-            display: grid;
-            grid-template-columns: 18% 82%;
-        }
+    .sidebar {
+        background: #1e1e1e;
+        color: white;
+        padding: 20px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+    }
 
-        .sidebar {
-            background-color: #1e1e1e;
-            color: white;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 15px;
-        }
+    .sidebar button {
+        padding: 10px;
+        border: none;
+        background: #333;
+        color: white;
+        border-radius: 6px;
+        cursor: pointer;
+    }
 
-        .sidebar h2 {
-            margin: 0 0 20px 0;
-            font-size: 1.2rem;
-            text-align: center;
-        }
+    .content {
+        padding: 25px;
+    }
 
-        .sidebar button {
-            padding: 12px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            background-color: #333;
-            color: white;
-            font-size: 0.95rem;
-        }
+    .card {
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        margin-bottom: 20px;
+        box-shadow: 0 2px 8px rgba(0,0,0,.1);
+    }
 
-        .sidebar button:hover {
-            background-color: #555;
-        }
+    .row {
+        display: flex;
+        gap: 15px;
+        flex-wrap: wrap;
+    }
 
-        .content {
-            padding: 25px;
-            display: flex;
-            flex-direction: column;
-            gap: 25px;
-        }
+    label {
+        display: flex;
+        flex-direction: column;
+        font-size: 0.9rem;
+        width: 180px;
+    }
 
-        .content h1 {
-            margin: 0;
-            font-size: 1.6rem;
-        }
+    input, select {
+        padding: 7px;
+        margin-top: 5px;
+    }
 
-        .card {
-            background-color: white;
-            border-radius: 8px;
-            padding: 25px;
-            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-            width: 100%;
-        }
+    .btn {
+        padding: 10px 16px;
+        border: none;
+        border-radius: 6px;
+        cursor: pointer;
+        background: #0078d7;
+        color: white;
+        margin-top: 10px;
+    }
 
-        .tipologias {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-            gap: 20px;
-        }
+    .btn-danger {
+        background: #c0392b;
+    }
 
-        .tipo-btn {
-            padding: 30px 20px;
-            border-radius: 10px;
-            border: none;
-            cursor: pointer;
-            background-color: #0078d7;
-            color: white;
-            font-size: 1.05rem;
-            font-weight: bold;
-            transition: background 0.2s, transform 0.1s;
-        }
-
-        .tipo-btn:hover {
-            background-color: #005fa3;
-            transform: translateY(-2px);
-        }
-    </style>
+    .porta {
+        border: 1px dashed #ccc;
+        padding: 15px;
+        margin-top: 15px;
+        border-radius: 6px;
+    }
+</style>
 </head>
 
 <body>
 <div class="app">
 
-    <!-- MENU -->
     <div class="sidebar">
-        <h2>ColorGlass</h2>
-
+        <h3>ColorGlass</h3>
         <button onclick="go('/')">Home</button>
         <button onclick="go('/perfis-page')">Perfis</button>
         <button onclick="go('/vidros-page')">Vidros</button>
-        <button onclick="go('/insumos-page')">Insumos</button>
-        <button onclick="go('/agregar-page')">Agregar</button>
-        <button onclick="go('/login?next=/admin')">Admin</button>
     </div>
 
-    <!-- CONTEÚDO -->
     <div class="content">
-        <h1>Selecionar Tipologia de Porta</h1>
+        <h1>Orçamento</h1>
 
-        <div class="card">
-            <div class="tipologias">
-                <button class="tipo-btn" onclick="go('/porta-abrir')">
-                    Porta de Abrir
-                </button>
+        <div id="portas"></div>
 
-                <button class="tipo-btn" onclick="go('/porta-correr')">
-                    Porta de Correr
-                </button>
-
-                <button class="tipo-btn" onclick="go('/porta-deslizante')">
-                    Porta Deslizante
-                </button>
-
-                <button class="tipo-btn" onclick="go('/porta-basculante')">
-                    Porta Basculante
-                </button>
-
-                <button class="tipo-btn" onclick="go('/porta-pivotante')">
-                    Porta Pivotante
-                </button>
-            </div>
-        </div>
+        <button class="btn" onclick="adicionarPorta()">+ Adicionar Porta</button>
+        <br><br>
+        <button class="btn">Calcular Orçamento</button>
     </div>
+
 </div>
 
 <script>
-    function go(pagina) {
-        window.location.href = pagina;
+function go(p){ window.location.href = p }
+
+/* =========================
+   MAPA DE TIPOLOGIAS
+   ========================= */
+
+const TIPOLOGIAS = {
+    giro: [
+        campo("largura"),
+        campo("altura"),
+        campo("perfil"),
+        campo("vidro"),
+        campo("dobradica")
+    ],
+    deslizante: [
+        campo("largura"),
+        campo("altura"),
+        campo("perfil"),
+        campo("vidro"),
+        campo("trilho"),
+        campo("qtd_folhas")
+    ],
+    correr: [
+        campo("largura"),
+        campo("altura"),
+        campo("perfil"),
+        campo("vidro"),
+        campo("trilho"),
+        campo("qtd_folhas")
+    ],
+    pivotante: [
+        campo("largura"),
+        campo("altura"),
+        campo("perfil"),
+        campo("vidro"),
+        campo("pivo")
+    ]
+}
+
+function campo(nome){
+    return nome
+}
+
+/* =========================
+   PORTAS
+   ========================= */
+
+let contador = 0
+
+function adicionarPorta(){
+    contador++
+
+    const div = document.createElement("div")
+    div.className = "porta"
+    div.dataset.id = contador
+
+    div.innerHTML = `
+        <h3>Porta ${contador}</h3>
+
+        <label>
+            Tipologia
+            <select onchange="renderCampos(this, ${contador})">
+                <option value="">Selecione</option>
+                <option value="giro">Porta de Giro</option>
+                <option value="deslizante">Porta Deslizante</option>
+                <option value="correr">Porta de Correr</option>
+                <option value="pivotante">Porta Pivotante</option>
+            </select>
+        </label>
+
+        <div class="row" id="campos-${contador}"></div>
+
+        <button class="btn btn-danger" onclick="this.parentElement.remove()">Remover</button>
+    `
+
+    document.getElementById("portas").appendChild(div)
+}
+
+function renderCampos(select, id){
+    const tipo = select.value
+    const container = document.getElementById(`campos-${id}`)
+    container.innerHTML = ""
+
+    if(!TIPOLOGIAS[tipo]) return
+
+    TIPOLOGIAS[tipo].forEach(c => {
+        container.appendChild(criarCampo(c))
+    })
+}
+
+/* =========================
+   FABRICA DE CAMPOS
+   ========================= */
+
+function criarCampo(nome){
+    const label = document.createElement("label")
+
+    switch(nome){
+        case "largura":
+            label.innerHTML = `Largura (mm)<input type="number">`
+            break
+        case "altura":
+            label.innerHTML = `Altura (mm)<input type="number">`
+            break
+        case "perfil":
+            label.innerHTML = `Perfil<select><option>Selecionar</option></select>`
+            break
+        case "vidro":
+            label.innerHTML = `Vidro<select><option>Selecionar</option></select>`
+            break
+        case "trilho":
+            label.innerHTML = `Trilho<select><option>Selecionar</option></select>`
+            break
+        case "qtd_folhas":
+            label.innerHTML = `Qtd Folhas<input type="number" value="2">`
+            break
+        case "dobradica":
+            label.innerHTML = `Dobradiça<select><option>Padrão</option></select>`
+            break
+        case "pivo":
+            label.innerHTML = `Pivô<select><option>Superior</option></select>`
+            break
     }
+
+    return label
+}
 </script>
+
 </body>
 </html>
