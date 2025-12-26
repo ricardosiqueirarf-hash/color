@@ -107,7 +107,7 @@ function carregarOrcamentos() {
         container.appendChild(table);
     })
     .catch(err=>{
-        console.error(err);
+        console.error("Erro ao carregar orçamentos:", err);
         document.getElementById("orcamentosExistentes").innerHTML = "<em>Erro ao carregar orçamentos.</em>";
     });
 }
@@ -128,11 +128,18 @@ function criarFichaCliente(){
     fetch('/api/orcamento', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        // envia apenas o nome do cliente
         body:JSON.stringify({cliente_nome: cliente.nome})
     })
-    .then(res => res.json())
-    .then(data => {
+    .then(async res => {
+        let data;
+        try {
+            data = await res.json();
+        } catch(e){
+            console.error("Resposta não é JSON:", await res.text());
+            alert("Erro ao criar ficha: resposta inesperada do servidor");
+            return;
+        }
+
         if(data.success){
             cliente.id = data.id;
             alert("Ficha criada com sucesso! ID: "+data.id);
@@ -142,7 +149,8 @@ function criarFichaCliente(){
         } else {
             alert("Erro ao criar ficha: "+data.error);
         }
-    }).catch(err=>console.error(err));
+    })
+    .catch(err=>console.error("Erro no fetch criarFichaCliente:", err));
 }
 
 // =====================
@@ -209,7 +217,7 @@ function desenharPorta(){
 }
 
 // =====================
-// SALVAR PORTAS (LOCAL, não envia ao Flask)
+// SALVAR PORTAS (LOCAL)
 // =====================
 let portaEditandoId=null
 
@@ -267,7 +275,7 @@ function editarPorta(id){
 }
 
 // =====================
-// SALVAR ORÇAMENTO FINAL (apenas nome do cliente)
+// SALVAR ORÇAMENTO FINAL
 // =====================
 function salvarOrcamento(){
     if(!cliente.nome){ alert("Crie a ficha do cliente primeiro"); return }
@@ -276,14 +284,19 @@ function salvarOrcamento(){
     fetch('/api/orcamento', {
         method:'POST',
         headers:{'Content-Type':'application/json'},
-        // envia apenas o cliente, portas desligadas
         body:JSON.stringify({cliente_nome: cliente.nome})
     })
-    .then(res=>res.json())
-    .then(data=>{
+    .then(async res=>{
+        let data;
+        try {
+            data = await res.json();
+        } catch(e){
+            console.error("Resposta não é JSON:", await res.text());
+            alert("Erro ao salvar orçamento: resposta inesperada do servidor");
+            return;
+        }
         if(data.success){
-            alert("Orçamento final enviado ao Supabase com sucesso!")
-            // Reset
+            alert("Orçamento final enviado com sucesso!")
             document.getElementById("formCliente").style.display="block"
             document.getElementById("formPorta").style.display="none"
             document.getElementById("clienteNome").value=""
@@ -291,10 +304,11 @@ function salvarOrcamento(){
             idCounter=0
             document.getElementById("portasSalvas").innerHTML=""
             carregarOrcamentos()
-        } else { 
+        } else {
             alert("Erro: "+data.error)
         }
-    }).catch(err=>console.error(err))
+    })
+    .catch(err => console.error("Erro no fetch salvarOrcamento:", err))
 }
 </script>
 
