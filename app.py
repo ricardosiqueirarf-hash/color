@@ -178,23 +178,12 @@ def criar_orcamento():
 
     # Criar orçamento
     payload = {"cliente_nome": cliente_nome, "numero_pedido": numero_pedido}
-    r = requests.post(
-        f"{SUPABASE_URL}/rest/v1/orcamentos?returning=id,data_criacao,numero_pedido,cliente_nome",
-        headers=HEADERS,
-        json=payload
-    )
+    r = requests.post(f"{SUPABASE_URL}/rest/v1/orcamentos?returning=id", headers=HEADERS, json=payload)
     r.raise_for_status()
     orcamento = r.json()
     orcamento_id = orcamento[0]["id"]
-    data_criacao = orcamento[0]["data_criacao"]
 
-    return jsonify({
-        "success": True,
-        "id": orcamento_id,
-        "numero_pedido": numero_pedido,
-        "cliente_nome": cliente_nome,
-        "data_criacao": data_criacao
-    })
+    return jsonify({"success": True, "id": orcamento_id, "numero_pedido": numero_pedido, "cliente_nome": cliente_nome})
 
 
 @app.route("/api/orcamentos", methods=["GET"])
