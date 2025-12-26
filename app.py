@@ -113,56 +113,11 @@ def check_session():
     return jsonify({"logged_in": "logged_in" in session})
 
 # =====================
-# API PERFIS
+# API PERFIS 
 # =====================
 
-@app.route("/api/perfis", methods=["GET"])
-@login_required
-def listar_perfis():
-    r = requests.get(f"{SUPABASE_URL}/rest/v1/perfis?select=*&order=nome.asc", headers=HEADERS)
-    r.raise_for_status()
-    return jsonify(r.json())
-
-@app.route("/api/perfis", methods=["POST"])
-@login_required
-def criar_perfil():
-    data = request.json
-    preco = calcular_preco(float(data["custo"]), float(data["margem"]), float(data["perda"]))
-    payload = {
-        "nome": data["nome"],
-        "custo": data["custo"],
-        "margem": data["margem"],
-        "perda": data["perda"],
-        "preco": round(preco, 2),
-        "tipologias": data.get("tipologias", [])
-    }
-    r = requests.post(f"{SUPABASE_URL}/rest/v1/perfis", headers=HEADERS, json=payload)
-    r.raise_for_status()
-    return jsonify({"status": "ok"})
-
-@app.route("/api/perfis/<id>", methods=["PUT"])
-@login_required
-def editar_perfil(id):
-    data = request.json
-    preco = calcular_preco(float(data["custo"]), float(data["margem"]), float(data["perda"]))
-    payload = {
-        "nome": data["nome"],
-        "custo": data["custo"],
-        "margem": data["margem"],
-        "perda": data["perda"],
-        "preco": round(preco, 2),
-        "tipologias": data.get("tipologias", [])
-    }
-    r = requests.patch(f"{SUPABASE_URL}/rest/v1/perfis?id=eq.{id}", headers=HEADERS, json=payload)
-    r.raise_for_status()
-    return jsonify({"status": "updated"})
-
-@app.route("/api/perfis/<id>", methods=["DELETE"])
-@login_required
-def deletar_perfil(id):
-    r = requests.delete(f"{SUPABASE_URL}/rest/v1/perfis?id=eq.{id}", headers=HEADERS)
-    r.raise_for_status()
-    return jsonify({"status": "deleted"})
+from api_perfis import perfis_bp
+app.register_blueprint(perfis_bp)
 
 # =====================
 # API VIDROS 
