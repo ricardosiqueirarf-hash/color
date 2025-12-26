@@ -55,18 +55,21 @@ def add_header(response):
     return response
 
 # =====================
-# PÁGINAS
+# PÁGINAS (TODAS PROTEGIDAS)
 # =====================
 
 @app.route("/")
+@login_required
 def index():
     return render_template("index.html")
 
 @app.route("/perfis-page")
+@login_required
 def perfis_page():
     return render_template("perfis.html")
 
 @app.route("/vidros-page")
+@login_required
 def vidros_page():
     return render_template("vidros.html")
 
@@ -76,15 +79,19 @@ def admin_page():
     return render_template("admin.html")
 
 # =====================
-# LOGIN
+# LOGIN (ÚNICA PÁGINA PÚBLICA)
 # =====================
 
 @app.route("/login", methods=["GET", "POST"])
 def login():
     if request.method == "POST":
-        if request.form.get("username") == "kadumon" and request.form.get("password") == "17241804":
+        username = request.form.get("username")
+        password = request.form.get("password")
+
+        if username == "kadumon" and password == "17241804":
             session["logged_in"] = True
             return redirect(request.args.get("next") or url_for("index"))
+
         return render_template("login.html", error="Usuário ou senha inválidos")
 
     return render_template("login.html")
@@ -103,6 +110,7 @@ def check_session():
 # =====================
 
 @app.route("/api/perfis", methods=["GET"])
+@login_required
 def listar_perfis():
     r = requests.get(
         f"{SUPABASE_URL}/rest/v1/perfis?select=*&order=nome.asc",
@@ -112,6 +120,7 @@ def listar_perfis():
 
 
 @app.route("/api/perfis", methods=["POST"])
+@login_required
 def criar_perfil():
     data = request.json
 
@@ -127,7 +136,7 @@ def criar_perfil():
         "margem": data["margem"],
         "perda": data["perda"],
         "preco": round(preco, 2),
-        "tipologias": data.get("tipologias", [])  # 👈 AQUI
+        "tipologias": data.get("tipologias", [])
     }
 
     r = requests.post(
@@ -140,6 +149,7 @@ def criar_perfil():
 
 
 @app.route("/api/perfis/<id>", methods=["PUT"])
+@login_required
 def editar_perfil(id):
     data = request.json
 
@@ -155,7 +165,7 @@ def editar_perfil(id):
         "margem": data["margem"],
         "perda": data["perda"],
         "preco": round(preco, 2),
-        "tipologias": data.get("tipologias", [])  # 👈 AQUI TAMBÉM
+        "tipologias": data.get("tipologias", [])
     }
 
     r = requests.patch(
@@ -168,6 +178,7 @@ def editar_perfil(id):
 
 
 @app.route("/api/perfis/<id>", methods=["DELETE"])
+@login_required
 def deletar_perfil(id):
     r = requests.delete(
         f"{SUPABASE_URL}/rest/v1/perfis?id=eq.{id}",
@@ -176,10 +187,11 @@ def deletar_perfil(id):
     return jsonify({"status": "deleted"}), r.status_code
 
 # =====================
-# API VIDROS (inalterado)
+# API VIDROS
 # =====================
 
 @app.route("/api/vidros", methods=["GET"])
+@login_required
 def listar_vidros():
     r = requests.get(
         f"{SUPABASE_URL}/rest/v1/vidros?select=*&order=tipo.asc",
@@ -189,6 +201,7 @@ def listar_vidros():
 
 
 @app.route("/api/vidros", methods=["POST"])
+@login_required
 def criar_vidro():
     data = request.json
 
@@ -217,6 +230,7 @@ def criar_vidro():
 
 
 @app.route("/api/vidros/<id>", methods=["PUT"])
+@login_required
 def editar_vidro(id):
     data = request.json
 
@@ -245,6 +259,7 @@ def editar_vidro(id):
 
 
 @app.route("/api/vidros/<id>", methods=["DELETE"])
+@login_required
 def deletar_vidro(id):
     r = requests.delete(
         f"{SUPABASE_URL}/rest/v1/vidros?id=eq.{id}",
@@ -258,4 +273,3 @@ def deletar_vidro(id):
 
 if __name__ == "__main__":
     app.run()
-
