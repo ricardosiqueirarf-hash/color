@@ -165,21 +165,36 @@ def criar_orcamento():
     if not cliente_nome:
         return jsonify({"success": False, "error": "Cliente não informado"}), 400
 
-    # Buscar último número de pedido
-    r_last = requests.get(
-        f"{SUPABASE_URL}/rest/v1/orcamentos?select=numero_pedido&order=numero_pedido.desc&limit=1",
-        headers=HEADERS
-    )
-    r_last.raise_for_status()
-    last_pedido = r_last.json()
-    numero_pedido = (last_pedido[0]['numero_pedido'] + 1) if last_pedido else 1
+    try:
+        # Buscar último número de pedido
+        r_last = requests.get(
+            f"{SUPABASE_URL}/rest/v1/orcamentos?select=numero_pedido&order=numero_pedido.desc&limit=1",
+            headers=HEADERS
+        )
+        r_last.raise_for_status()
+        last_pedido = r_last.json()
+        numero_pedido = (last_pedido[0]['numero_pedido'] + 1) if last_pedido else 1
 
-    # Apenas logar payload
-    payload = {"cliente_nome": cliente_nome, "numero_pedido": numero_pedido}
-    print("Payload que seria enviado:", payload)
+        # Criar o novo cliente/orçamento no Supabase
+        payload = {"cliente_nome": cliente_nome, "numero_pedido": numero_pedido}
+        r_post = requests.post(
+            f"{SUPABASE_URL}/rest/v1/orcamentos",
+            headers={**HEADERS, "Content-Type": "application/json", "Prefer": "return=representation"},
+            json=payload
+        )
+        r_post.raise_for_status()
+        new_orcamento = r_post.json()
 
-    # Retornar sem postar ainda
-    return jsonify({"success": True, "id": 9999, "numero_pedido": numero_pedido, "cliente_nome": cliente_nome})
+        # Retornar sucesso com o ID real
+        return jsonify({
+            "success": True,
+            "id": new_orcamento[0]['id'],
+            "numero_pedido": numero_pedido,
+            "cliente_nome": cliente_nome
+        })
+
+    except Exception as e:
+        return jsonify({"success": False, "error": str(e)}), 500
 
 
 @app.route("/api/orcamentos", methods=["GET"])
