@@ -18,7 +18,7 @@ HEADERS = {
 }
 
 app = Flask(__name__, template_folder="templates")
-app.secret_key = os.environ.get("FLASK_SECRET_KEY")
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret")
 
 CORS(app)
 
@@ -26,8 +26,9 @@ CORS(app)
 # CÁLCULOS
 # =====================
 
-def calcular_preco_vidro(custo_m2, margem):
-    return custo_m2 * (1 + margem)
+def calcular_preco(custo, margem, perda):
+    custo_com_perda = custo * (1 + perda / 100)
+    return custo_com_perda * (1 + margem / 100)
 
 # =====================
 # AUTH
@@ -103,13 +104,88 @@ def check_session():
     return jsonify({"logged_in": "logged_in" in session})
 
 # =====================
+# API PERFIS
+# =====================
+
+@app.route("/api/perfis", methods=["GET"])
+def listar_perfis():
+    r = requests.get(
+        f"{SUPABASE_URL}/rest/v1/perfis?select=*&order=nome.asc",
+        headers=HEADERS
+    )
+    return jsonify(r.json()), r.status_code
+
+
+@app.route("/api/perfis", methods=["POST"])
+def criar_perfil():
+    data = request.json
+
+    preco = calcular_preco(
+        float(data["custo"]),
+        float(data["margem"]),
+        float(data["perda"])
+    )
+
+    payload = {
+        "nome": data["nome"],
+        "custo": data["custo"],
+        "margem": data["margem"],
+        "perda": data["perda"],
+        "preco": round(preco, 2)
+    }
+
+    r = requests.post(
+        f"{SUPABASE_URL}/rest/v1/perfis",
+        headers=HEADERS,
+        json=payload
+    )
+
+    return jsonify({"status": "ok"}), r.status_code
+
+
+@app.route("/api/perfis/<id>", methods=["PUT"])
+def editar_perfil(id):
+    data = request.json
+
+    preco = calcular_preco(
+        float(data["custo"]),
+        float(data["margem"]),
+        float(data["perda"])
+    )
+
+    payload = {
+        "nome": data["nome"],
+        "custo": data["custo"],
+        "margem": data["margem"],
+        "perda": data["perda"],
+        "preco": round(preco, 2)
+    }
+
+    r = requests.patch(
+        f"{SUPABASE_URL}/rest/v1/perfis?id=eq.{id}",
+        headers=HEADERS,
+        json=payload
+    )
+
+    return jsonify({"status": "updated"}), r.status_code
+
+
+@app.route("/api/perfis/<id>", methods=["DELETE"])
+def deletar_perfil(id):
+    r = requests.delete(
+        f"{SUPABASE_URL}/rest/v1/perfis?id=eq.{id}",
+        headers=HEADERS
+    )
+    return jsonify({"status": "deleted"}), r.status_code
+
+# =====================
 # API VIDROS
 # =====================
 
 @app.route("/api/vidros", methods=["GET"])
 def listar_vidros():
     r = requests.get(
-        f"{SUPABASE_URL}/rest/v1/vidros?select=*&order=espessura.asc",
+        f"{SUPABASE_URL}/rest/v1/vidros?select=*&order=tipo.asc",
         headers=HEADERS
     )
     return jsonify(r.json()), r.status_code
@@ -119,16 +195,18 @@ def listar_vidros():
 def criar_vidro():
     data = request.json
 
-    preco = calcular_preco_vidro(
-        float(data["custo_m2"]),
-        float(data["margem"])
+    preco = calcular_preco(
+        float(data["custo"]),
+        float(data["margem"]),
+        float(data["perda"])
     )
 
     payload = {
         "tipo": data["tipo"],
         "espessura": data["espessura"],
-        "custo_m2": data["custo_m2"],
+        "custo": data["custo"],
         "margem": data["margem"],
+        "perda": data["perda"],
         "preco": round(preco, 2)
     }
 
@@ -145,16 +223,18 @@ def criar_vidro():
 def editar_vidro(id):
     data = request.json
 
-    preco = calcular_preco_vidro(
-        float(data["custo_m2"]),
-        float(data["margem"])
+    preco = calcular_preco(
+        float(data["custo"]),
+        float(data["margem"]),
+        float(data["perda"])
     )
 
     payload = {
         "tipo": data["tipo"],
         "espessura": data["espessura"],
-        "custo_m2": data["custo_m2"],
+        "custo": data["custo"],
         "margem": data["margem"],
+        "perda": data["perda"],
         "preco": round(preco, 2)
     }
 
@@ -181,3 +261,4 @@ def deletar_vidro(id):
 
 if __name__ == "__main__":
     app.run()
+
