@@ -165,55 +165,54 @@ def deletar_perfil(id):
     return jsonify({"status": "deleted"})
 
 # =====================
-# API MATERIAIS / INSUMOS
+# API VIDROS
 # =====================
 
-@app.route("/api/materiais", methods=["GET"])
+@app.route("/api/vidros", methods=["GET"])
 @login_required
-def listar_materiais():
-    r = requests.get(f"{SUPABASE_URL}/rest/v1/materiais?select=*&order=nome.asc", headers=HEADERS)
+def listar_vidros():
+    r = requests.get(f"{SUPABASE_URL}/rest/v1/vidros?select=*&order=tipo.asc", headers=HEADERS)
     r.raise_for_status()
     return jsonify(r.json())
 
-@app.route("/api/materiais", methods=["POST"])
+@app.route("/api/vidros", methods=["POST"])
 @login_required
-def criar_material():
+def criar_vidro():
     data = request.json
-    # calcula preço se você quiser seguir a lógica do HTML, ou usa o preço enviado
-    preco = float(data.get("preco", 0))  
+    preco = float(data["custo"]) * (1 + float(data["margem"])/100) * (1 + float(data["perda"])/100)
     payload = {
-        "nome": data["nome"],
+        "tipo": data["tipo"],
+        "espessura": data["espessura"],
         "custo": data["custo"],
-        "tipo_medida": data["tipo_medida"],
         "margem": data["margem"],
         "perda": data["perda"],
         "preco": round(preco, 2)
     }
-    r = requests.post(f"{SUPABASE_URL}/rest/v1/materiais", headers=HEADERS, json=payload)
+    r = requests.post(f"{SUPABASE_URL}/rest/v1/vidros", headers=HEADERS, json=payload)
     r.raise_for_status()
     return jsonify({"status": "ok"})
 
-@app.route("/api/materiais/<id>", methods=["PUT"])
+@app.route("/api/vidros/<id>", methods=["PUT"])
 @login_required
-def editar_material(id):
+def editar_vidro(id):
     data = request.json
-    preco = float(data.get("preco", 0))
+    preco = float(data["custo"]) * (1 + float(data["margem"])/100) * (1 + float(data["perda"])/100)
     payload = {
-        "nome": data["nome"],
+        "tipo": data["tipo"],
+        "espessura": data["espessura"],
         "custo": data["custo"],
-        "tipo_medida": data["tipo_medida"],
         "margem": data["margem"],
         "perda": data["perda"],
         "preco": round(preco, 2)
     }
-    r = requests.patch(f"{SUPABASE_URL}/rest/v1/materiais?id=eq.{id}", headers=HEADERS, json=payload)
+    r = requests.patch(f"{SUPABASE_URL}/rest/v1/vidros?id=eq.{id}", headers=HEADERS, json=payload)
     r.raise_for_status()
     return jsonify({"status": "updated"})
 
-@app.route("/api/materiais/<id>", methods=["DELETE"])
+@app.route("/api/vidros/<id>", methods=["DELETE"])
 @login_required
-def deletar_material(id):
-    r = requests.delete(f"{SUPABASE_URL}/rest/v1/materiais?id=eq.{id}", headers=HEADERS)
+def deletar_vidro(id):
+    r = requests.delete(f"{SUPABASE_URL}/rest/v1/vidros?id=eq.{id}", headers=HEADERS)
     r.raise_for_status()
     return jsonify({"status": "deleted"})
 
