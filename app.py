@@ -55,7 +55,7 @@ def add_header(response):
     return response
 
 # =====================
-# PÁGINAS (TODAS PROTEGIDAS)
+# PÁGINAS
 # =====================
 
 @app.route("/")
@@ -110,7 +110,8 @@ def check_session():
 @login_required
 def listar_perfis():
     r = requests.get(f"{SUPABASE_URL}/rest/v1/perfis?select=*&order=nome.asc", headers=HEADERS)
-    return jsonify(r.json()), r.status_code
+    r.raise_for_status()
+    return jsonify(r.json())
 
 @app.route("/api/perfis", methods=["POST"])
 @login_required
@@ -126,7 +127,8 @@ def criar_perfil():
         "tipologias": data.get("tipologias", [])
     }
     r = requests.post(f"{SUPABASE_URL}/rest/v1/perfis", headers=HEADERS, json=payload)
-    return jsonify({"status": "ok"}), r.status_code
+    r.raise_for_status()
+    return jsonify({"status": "ok"})
 
 @app.route("/api/perfis/<id>", methods=["PUT"])
 @login_required
@@ -142,61 +144,15 @@ def editar_perfil(id):
         "tipologias": data.get("tipologias", [])
     }
     r = requests.patch(f"{SUPABASE_URL}/rest/v1/perfis?id=eq.{id}", headers=HEADERS, json=payload)
-    return jsonify({"status": "updated"}), r.status_code
+    r.raise_for_status()
+    return jsonify({"status": "updated"})
 
 @app.route("/api/perfis/<id>", methods=["DELETE"])
 @login_required
 def deletar_perfil(id):
     r = requests.delete(f"{SUPABASE_URL}/rest/v1/perfis?id=eq.{id}", headers=HEADERS)
-    return jsonify({"status": "deleted"}), r.status_code
-
-# =====================
-# API VIDROS
-# =====================
-
-@app.route("/api/vidros", methods=["GET"])
-@login_required
-def listar_vidros():
-    r = requests.get(f"{SUPABASE_URL}/rest/v1/vidros?select=*&order=tipo.asc", headers=HEADERS)
-    return jsonify(r.json()), r.status_code
-
-@app.route("/api/vidros", methods=["POST"])
-@login_required
-def criar_vidro():
-    data = request.json
-    preco = calcular_preco(float(data["custo"]), float(data["margem"]), float(data["perda"]))
-    payload = {
-        "tipo": data["tipo"],
-        "espessura": data["espessura"],
-        "custo": data["custo"],
-        "margem": data["margem"],
-        "perda": data["perda"],
-        "preco": round(preco, 2)
-    }
-    r = requests.post(f"{SUPABASE_URL}/rest/v1/vidros", headers=HEADERS, json=payload)
-    return jsonify({"status": "ok"}), r.status_code
-
-@app.route("/api/vidros/<id>", methods=["PUT"])
-@login_required
-def editar_vidro(id):
-    data = request.json
-    preco = calcular_preco(float(data["custo"]), float(data["margem"]), float(data["perda"]))
-    payload = {
-        "tipo": data["tipo"],
-        "espessura": data["espessura"],
-        "custo": data["custo"],
-        "margem": data["margem"],
-        "perda": data["perda"],
-        "preco": round(preco, 2)
-    }
-    r = requests.patch(f"{SUPABASE_URL}/rest/v1/vidros?id=eq.{id}", headers=HEADERS, json=payload)
-    return jsonify({"status": "updated"}), r.status_code
-
-@app.route("/api/vidros/<id>", methods=["DELETE"])
-@login_required
-def deletar_vidro(id):
-    r = requests.delete(f"{SUPABASE_URL}/rest/v1/vidros?id=eq.{id}", headers=HEADERS)
-    return jsonify({"status": "deleted"}), r.status_code
+    r.raise_for_status()
+    return jsonify({"status": "deleted"})
 
 # =====================
 # API ORÇAMENTOS
@@ -213,22 +169,22 @@ def criar_orcamento():
         return jsonify({"success": False, "error": "Cliente não informado"}), 400
 
     # Buscar último número de pedido
-    r_last = requests.get(f"{SUPABASE_URL}/rest/v1/orcamentos?select=numero_pedido&order=numero_pedido.desc&limit=1", headers=HEADERS)
+    r_last = requests.get(
+        f"{SUPABASE_URL}/rest/v1/orcamentos?select=numero_pedido&order=numero_pedido.desc&limit=1",
+        headers=HEADERS
+    )
+    r_last.raise_for_status()
     last_pedido = r_last.json()
     numero_pedido = (last_pedido[0]['numero_pedido'] + 1) if last_pedido else 1
 
     # Criar orçamento
     payload = {"cliente_nome": cliente_nome, "numero_pedido": numero_pedido}
-    r = requests.post(f"{SUPABASE_URL}/rest/v1/orcamentos", headers=HEADERS, json=payload)
-    if r.status_code not in [200,201]:
-        return jsonify({"success": False, "error": "Erro ao criar orçamento"}), r.status_code
-
+    r = requests.post(f"{SUPABASE_URL}/rest/v1/orcamentos?returning=id", headers=HEADERS, json=payload)
+    r.raise_for_status()
     orcamento = r.json()
-    orcamento_id = orcamento[0]["id"] if isinstance(orcamento, list) and len(orcamento) > 0 else None
-    if not orcamento_id:
-        return jsonify({"success": False, "error": "Não retornou ID do orçamento"}), 500
+    orcamento_id = orcamento[0]["id"]
 
-    # Salvar portas vinculadas ao orçamento
+    # Salvar portas vinculadas
     portas_payload = []
     for p in portas:
         portas_payload.append({
@@ -239,22 +195,19 @@ def criar_orcamento():
         })
     if portas_payload:
         r_portas = requests.post(f"{SUPABASE_URL}/rest/v1/portas", headers=HEADERS, json=portas_payload)
-        if r_portas.status_code not in [200,201]:
-            return jsonify({"success": False, "error": "Erro ao salvar portas"}), r_portas.status_code
+        r_portas.raise_for_status()
 
     return jsonify({"success": True, "id": orcamento_id, "numero_pedido": numero_pedido, "cliente_nome": cliente_nome})
-
-# =====================
-# NOVO ENDPOINT GET ORÇAMENTOS
-# =====================
 
 @app.route("/api/orcamentos", methods=["GET"])
 @login_required
 def listar_orcamentos():
     try:
-        r = requests.get(f"{SUPABASE_URL}/rest/v1/orcamentos?select=id,numero_pedido,cliente_nome,created_at&order=numero_pedido.asc", headers=HEADERS)
-        if r.status_code != 200:
-            return jsonify({"success": False, "error": "Erro ao buscar orçamentos"}), r.status_code
+        r = requests.get(
+            f"{SUPABASE_URL}/rest/v1/orcamentos?select=id,numero_pedido,cliente_nome,data_criacao&order=numero_pedido.asc",
+            headers=HEADERS
+        )
+        r.raise_for_status()
         return jsonify({"success": True, "orcamentos": r.json()})
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
@@ -264,6 +217,6 @@ def listar_orcamentos():
 # =====================
 
 if __name__ == "__main__":
-    app.run()
+    app.run(debug=True)
 
 
