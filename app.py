@@ -163,7 +163,6 @@ def deletar_perfil(id):
 def criar_orcamento():
     data = request.json
     cliente_nome = data.get("cliente_nome")
-
     if not cliente_nome:
         return jsonify({"success": False, "error": "Cliente não informado"}), 400
 
@@ -176,14 +175,12 @@ def criar_orcamento():
     last_pedido = r_last.json()
     numero_pedido = (last_pedido[0]['numero_pedido'] + 1) if last_pedido else 1
 
-    # Criar orçamento
+    # Apenas logar payload
     payload = {"cliente_nome": cliente_nome, "numero_pedido": numero_pedido}
-    r = requests.post(f"{SUPABASE_URL}/rest/v1/orcamentos?returning=id", headers=HEADERS, json=payload)
-    r.raise_for_status()
-    orcamento = r.json()
-    orcamento_id = orcamento[0]["id"]
+    print("Payload que seria enviado:", payload)
 
-    return jsonify({"success": True, "id": orcamento_id, "numero_pedido": numero_pedido, "cliente_nome": cliente_nome})
+    # Retornar sem postar ainda
+    return jsonify({"success": True, "id": 9999, "numero_pedido": numero_pedido, "cliente_nome": cliente_nome})
 
 
 @app.route("/api/orcamentos", methods=["GET"])
