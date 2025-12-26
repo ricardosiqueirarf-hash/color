@@ -4,9 +4,6 @@
     <meta charset="UTF-8">
     <title>Vidros</title>
 
-    <!-- Supabase JS v2 -->
-    <script src="https://unpkg.com/@supabase/supabase-js@2"></script>
-
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -90,27 +87,10 @@
 </table>
 
 <script>
-    // 🔐 CONFIGURAÇÃO SUPABASE
-    const SUPABASE_URL = "https://hfhwvzldhgqniqnurync.supabase.co"
-    const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhmaHd2emxkaGdxbmlxbnVyeW5jIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY1NDM0OTUsImV4cCI6MjA4MjExOTQ5NX0.onV4J9meGw8Uq0d3f39k2ZPbFAYvDwZM-duI3Zqgvec"
-
-    const supabaseclient = window.supabase.createClient(
-        SUPABASE_URL,
-        SUPABASE_KEY
-    );
-
     // 📦 CARREGAR VIDROS
     async function carregar() {
-        const { data, error } = await supabaseclient
-            .from("vidros")
-            .select("*")
-            .order("tipo");
-
-        if (error) {
-            alert("Erro ao carregar vidros");
-            console.error(error);
-            return;
-        }
+        const res = await fetch("/api/vidros");
+        const data = await res.json();
 
         const tbody = document.getElementById("tabela");
         tbody.innerHTML = "";
@@ -142,12 +122,6 @@
         });
     }
 
-    // 🧮 CÁLCULO DO PREÇO
-    function calcularPreco(custo, margem, perda) {
-        const custoComPerda = custo * (1 + perda / 100);
-        return custoComPerda * (1 + margem / 100);
-    }
-
     // 💾 SALVAR / ATUALIZAR
     async function salvar() {
         const id = document.getElementById("vidro_id").value;
@@ -162,17 +136,20 @@
             return;
         }
 
-        const preco = calcularPreco(custo, margem, perda);
+        const payload = { tipo, espessura, custo, margem, perda };
 
         if (id) {
-            await supabaseclient
-                .from("vidros")
-                .update({ tipo, espessura, custo, margem, perda, preco })
-                .eq("id", id);
+            await fetch(`/api/vidros/${id}`, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
         } else {
-            await supabaseclient
-                .from("vidros")
-                .insert([{ tipo, espessura, custo, margem, perda, preco }]);
+            await fetch("/api/vidros", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(payload)
+            });
         }
 
         cancelar();
@@ -193,10 +170,9 @@
     async function excluir(id) {
         if (!confirm("Excluir este vidro?")) return;
 
-        await supabaseclient
-            .from("vidros")
-            .delete()
-            .eq("id", id);
+        await fetch(`/api/vidros/${id}`, {
+            method: "DELETE"
+        });
 
         carregar();
     }
