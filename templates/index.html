@@ -4,94 +4,84 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Orçamento de Portas</title>
-
 <style>
-    body {
-        margin: 0;
-        font-family: Arial, Helvetica, sans-serif;
-        background: #f2f2f2;
-    }
-
-    .app {
-        display: grid;
-        grid-template-columns: 18% 82%;
-        height: 100vh;
-    }
-
-    .sidebar {
-        background: #1e1e1e;
-        color: white;
-        padding: 20px;
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-    }
-
-    .sidebar button {
-        padding: 10px;
-        border: none;
-        background: #333;
-        color: white;
-        border-radius: 6px;
-        cursor: pointer;
-    }
-
-    .content {
-        padding: 25px;
-    }
-
-    .card {
-        background: white;
-        padding: 20px;
-        border-radius: 8px;
-        margin-bottom: 20px;
-        box-shadow: 0 2px 8px rgba(0,0,0,.1);
-    }
-
-    .row {
-        display: flex;
-        gap: 15px;
-        flex-wrap: wrap;
-    }
-
-    label {
-        display: flex;
-        flex-direction: column;
-        font-size: 0.9rem;
-        width: 180px;
-    }
-
-    input, select {
-        padding: 7px;
-        margin-top: 5px;
-    }
-
-    .btn {
-        padding: 10px 16px;
-        border: none;
-        border-radius: 6px;
-        cursor: pointer;
-        background: #0078d7;
-        color: white;
-        margin-top: 10px;
-    }
-
-    .btn-danger {
-        background: #c0392b;
-    }
-
-    .porta {
-        border: 1px dashed #ccc;
-        padding: 15px;
-        margin-top: 15px;
-        border-radius: 6px;
-    }
+body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #f2f2f2;
+}
+.app {
+    display: grid;
+    grid-template-columns: 18% 82%;
+    height: 100vh;
+}
+.sidebar {
+    background: #1e1e1e;
+    color: white;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.sidebar button {
+    padding: 10px;
+    border: none;
+    background: #333;
+    color: white;
+    border-radius: 6px;
+    cursor: pointer;
+}
+.content {
+    padding: 25px;
+    overflow-y: auto;
+    height: 100vh;
+}
+.row {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+    margin-top: 10px;
+}
+label {
+    display: flex;
+    flex-direction: column;
+    font-size: 0.9rem;
+    width: 180px;
+}
+input, select {
+    padding: 7px;
+    margin-top: 5px;
+}
+.btn {
+    padding: 10px 16px;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    background: #0078d7;
+    color: white;
+    margin-top: 10px;
+}
+.btn-danger {
+    background: #c0392b;
+}
+#formPorta {
+    background: white;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,.1);
+}
+#portasSalvas div {
+    margin-bottom: 10px;
+    border: 1px solid #333;
+    padding: 10px;
+    background: #f0f0f0;
+}
 </style>
 </head>
-
 <body>
-<div class="app">
 
+<div class="app">
     <div class="sidebar">
         <h3>ColorGlass</h3>
         <button onclick="go('/')">Home</button>
@@ -100,143 +90,178 @@
     </div>
 
     <div class="content">
-        <h1>Orçamento</h1>
+        <h1>Orçamento de Portas</h1>
 
-        <div id="portas"></div>
+        <div id="formPorta">
+            <label>
+                Tipologia
+                <select id="tipologia" onchange="renderCampos()">
+                    <option value="">Selecione</option>
+                    <option value="giro">Porta de Giro</option>
+                    <option value="deslizante">Porta Deslizante</option>
+                    <option value="correr">Porta de Correr</option>
+                    <option value="pivotante">Porta Pivotante</option>
+                </select>
+            </label>
 
-        <button class="btn" onclick="adicionarPorta()">+ Adicionar Porta</button>
-        <br><br>
-        <button class="btn">Calcular Orçamento</button>
+            <div class="row" id="campos"></div>
+
+            <button class="btn" onclick="salvarPorta()">Salvar Porta</button>
+
+            <svg id="portaSVG" width="200" height="400" style="border:1px solid #000; margin-top:10px;"></svg>
+        </div>
+
+        <h2>Portas Salvas</h2>
+        <div id="portasSalvas"></div>
     </div>
-
 </div>
 
 <script>
 function go(p){ window.location.href = p }
 
-/* =========================
-   MAPA DE TIPOLOGIAS
-   ========================= */
-
+// Tipologias
 const TIPOLOGIAS = {
-    giro: [
-        campo("largura"),
-        campo("altura"),
-        campo("perfil"),
-        campo("vidro"),
-        campo("dobradica")
-    ],
-    deslizante: [
-        campo("largura"),
-        campo("altura"),
-        campo("perfil"),
-        campo("vidro"),
-        campo("trilho"),
-        campo("qtd_folhas")
-    ],
-    correr: [
-        campo("largura"),
-        campo("altura"),
-        campo("perfil"),
-        campo("vidro"),
-        campo("trilho"),
-        campo("qtd_folhas")
-    ],
-    pivotante: [
-        campo("largura"),
-        campo("altura"),
-        campo("perfil"),
-        campo("vidro"),
-        campo("pivo")
-    ]
+    giro: ["largura","altura","perfil","vidro","dobradica"],
+    deslizante: ["largura","altura","perfil","vidro","trilho","qtd_folhas"],
+    correr: ["largura","altura","perfil","vidro","trilho","qtd_folhas"],
+    pivotante: ["largura","altura","perfil","vidro","pivo"]
 }
 
-function campo(nome){
-    return nome
-}
-
-/* =========================
-   PORTAS
-   ========================= */
-
-let contador = 0
-
-function adicionarPorta(){
-    contador++
-
-    const div = document.createElement("div")
-    div.className = "porta"
-    div.dataset.id = contador
-
-    div.innerHTML = `
-        <h3>Porta ${contador}</h3>
-
-        <label>
-            Tipologia
-            <select onchange="renderCampos(this, ${contador})">
-                <option value="">Selecione</option>
-                <option value="giro">Porta de Giro</option>
-                <option value="deslizante">Porta Deslizante</option>
-                <option value="correr">Porta de Correr</option>
-                <option value="pivotante">Porta Pivotante</option>
-            </select>
-        </label>
-
-        <div class="row" id="campos-${contador}"></div>
-
-        <button class="btn btn-danger" onclick="this.parentElement.remove()">Remover</button>
-    `
-
-    document.getElementById("portas").appendChild(div)
-}
-
-function renderCampos(select, id){
-    const tipo = select.value
-    const container = document.getElementById(`campos-${id}`)
+// Renderiza campos do formulário
+function renderCampos(){
+    const tipo = document.getElementById("tipologia").value
+    const container = document.getElementById("campos")
     container.innerHTML = ""
-
     if(!TIPOLOGIAS[tipo]) return
-
     TIPOLOGIAS[tipo].forEach(c => {
-        container.appendChild(criarCampo(c))
+        const label = document.createElement("label")
+        switch(c){
+            case "largura":
+                label.innerHTML = `Largura (mm)<input type="number" id="largura" value="800" oninput="desenharPorta()">`
+                break
+            case "altura":
+                label.innerHTML = `Altura (mm)<input type="number" id="altura" value="2000" oninput="desenharPorta()">`
+                break
+            case "perfil":
+                label.innerHTML = `Perfil<select id="perfil"><option>Padrão</option></select>`
+                break
+            case "vidro":
+                label.innerHTML = `Vidro<select id="vidro"><option>Padrão</option></select>`
+                break
+            case "trilho":
+                label.innerHTML = `Trilho<select id="trilho"><option>Padrão</option></select>`
+                break
+            case "qtd_folhas":
+                label.innerHTML = `Qtd Folhas<input type="number" id="qtd_folhas" value="2" oninput="desenharPorta()">`
+                break
+            case "dobradica":
+                label.innerHTML = `Dobradiça<select id="dobradica"><option>Padrão</option></select>`
+                break
+            case "pivo":
+                label.innerHTML = `Pivô<select id="pivo"><option>Superior</option></select>`
+                break
+        }
+        container.appendChild(label)
+    })
+    desenharPorta() // desenha automaticamente ao criar os campos
+}
+
+// Desenho da porta
+function desenharPorta(){
+    const larguraInput = document.getElementById("largura")
+    const alturaInput = document.getElementById("altura")
+    const svg = document.getElementById("portaSVG")
+    if(!larguraInput || !alturaInput || !svg) return
+
+    const largura = parseFloat(larguraInput.value)
+    const altura = parseFloat(alturaInput.value)
+
+    svg.innerHTML = ''
+    const maxSVGWidth = svg.clientWidth
+    const maxSVGHeight = svg.clientHeight
+    const padding = 10
+    const scale = Math.min((maxSVGWidth-2*padding)/largura, (maxSVGHeight-2*padding)/altura)
+    const rectWidth = largura*scale
+    const rectHeight = altura*scale
+    const rect = document.createElementNS("http://www.w3.org/2000/svg","rect")
+    rect.setAttribute("x",(maxSVGWidth-rectWidth)/2)
+    rect.setAttribute("y",(maxSVGHeight-rectHeight)/2)
+    rect.setAttribute("width",rectWidth)
+    rect.setAttribute("height",rectHeight)
+    rect.setAttribute("fill","#ccc")
+    rect.setAttribute("stroke","#000")
+    rect.setAttribute("stroke-width","6")
+    rect.setAttribute("vector-effect","non-scaling-stroke")
+    svg.appendChild(rect)
+}
+
+// Salvar/Atualizar porta
+let idCounter = 0
+let portasSalvas = []
+let portaEditandoId = null
+
+function salvarPorta(){
+    const tipologia = document.getElementById("tipologia").value
+    if(!tipologia){ alert("Selecione tipologia"); return }
+
+    const dados = {}
+    TIPOLOGIAS[tipologia].forEach(c=>{
+        const el = document.getElementById(c)
+        if(el) dados[c]=el.value
+    })
+    const svg = document.getElementById("portaSVG").outerHTML
+
+    if(portaEditandoId !== null){
+        const porta = portasSalvas.find(p=>p.id===portaEditandoId)
+        if(porta){
+            porta.tipologia = tipologia
+            porta.dados = dados
+            porta.svg = svg
+        }
+        portaEditandoId = null
+    } else {
+        const id = idCounter++
+        portasSalvas.push({id, tipologia, dados, svg})
+    }
+
+    renderPortasSalvas()
+}
+
+// Renderiza portas salvas
+function renderPortasSalvas(){
+    const container = document.getElementById("portasSalvas")
+    container.innerHTML = ""
+    portasSalvas.forEach(p=>{
+        const div = document.createElement("div")
+        let info = `<strong>Porta ${p.id} - ${p.tipologia}</strong><br>`
+        for(let k in p.dados) info+=`${k}: ${p.dados[k]}<br>`
+        div.innerHTML = info + p.svg
+
+        const btnEditar = document.createElement("button")
+        btnEditar.textContent = "Editar"
+        btnEditar.className = "btn"
+        btnEditar.style.marginTop = "5px"
+        btnEditar.onclick = ()=>editarPorta(p.id)
+        div.appendChild(btnEditar)
+
+        container.appendChild(div)
     })
 }
 
-/* =========================
-   FABRICA DE CAMPOS
-   ========================= */
+// Editar porta
+function editarPorta(id){
+    const porta = portasSalvas.find(p=>p.id===id)
+    if(!porta) return
 
-function criarCampo(nome){
-    const label = document.createElement("label")
+    portaEditandoId = id
 
-    switch(nome){
-        case "largura":
-            label.innerHTML = `Largura (mm)<input type="number">`
-            break
-        case "altura":
-            label.innerHTML = `Altura (mm)<input type="number">`
-            break
-        case "perfil":
-            label.innerHTML = `Perfil<select><option>Selecionar</option></select>`
-            break
-        case "vidro":
-            label.innerHTML = `Vidro<select><option>Selecionar</option></select>`
-            break
-        case "trilho":
-            label.innerHTML = `Trilho<select><option>Selecionar</option></select>`
-            break
-        case "qtd_folhas":
-            label.innerHTML = `Qtd Folhas<input type="number" value="2">`
-            break
-        case "dobradica":
-            label.innerHTML = `Dobradiça<select><option>Padrão</option></select>`
-            break
-        case "pivo":
-            label.innerHTML = `Pivô<select><option>Superior</option></select>`
-            break
-    }
-
-    return label
+    document.getElementById("tipologia").value = porta.tipologia
+    renderCampos()
+    TIPOLOGIAS[porta.tipologia].forEach(c=>{
+        const el = document.getElementById(c)
+        if(el) el.value = porta.dados[c]
+    })
+    desenharPorta()
 }
 </script>
 
