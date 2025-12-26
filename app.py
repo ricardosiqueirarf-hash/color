@@ -163,7 +163,6 @@ def deletar_perfil(id):
 def criar_orcamento():
     data = request.json
     cliente_nome = data.get("cliente_nome")
-    portas = data.get("portas", [])
 
     if not cliente_nome:
         return jsonify({"success": False, "error": "Cliente não informado"}), 400
@@ -177,42 +176,26 @@ def criar_orcamento():
     last_pedido = r_last.json()
     numero_pedido = (last_pedido[0]['numero_pedido'] + 1) if last_pedido else 1
 
-    # Criar orçamento com return=representation para pegar o id
+    # Criar orçamento
     payload = {"cliente_nome": cliente_nome, "numero_pedido": numero_pedido}
     r = requests.post(
-        f"{SUPABASE_URL}/rest/v1/orcamentos?return=representation",
+        f"{SUPABASE_URL}/rest/v1/orcamentos?returning=id,data_criacao,numero_pedido,cliente_nome",
         headers=HEADERS,
         json=payload
     )
     r.raise_for_status()
     orcamento = r.json()
-    if not orcamento or "id" not in orcamento[0]:
-        return jsonify({"success": False, "error": "Não retornou ID do orçamento"}), 500
     orcamento_id = orcamento[0]["id"]
-
-    # Salvar portas vinculadas ao orçamento
-    portas_payload = []
-    for p in portas:
-        portas_payload.append({
-            "orcamento_id": orcamento_id,
-            "tipologia": p.get("tipologia"),
-            "dados": p.get("dados"),
-            "svg": p.get("svg")
-        })
-    if portas_payload:
-        r_portas = requests.post(
-            f"{SUPABASE_URL}/rest/v1/portas",
-            headers=HEADERS,
-            json=portas_payload
-        )
-        r_portas.raise_for_status()
+    data_criacao = orcamento[0]["data_criacao"]
 
     return jsonify({
         "success": True,
         "id": orcamento_id,
         "numero_pedido": numero_pedido,
-        "cliente_nome": cliente_nome
+        "cliente_nome": cliente_nome,
+        "data_criacao": data_criacao
     })
+
 
 @app.route("/api/orcamentos", methods=["GET"])
 @login_required
