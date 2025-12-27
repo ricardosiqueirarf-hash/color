@@ -63,12 +63,12 @@ def add_header(response):
 def index():
     return render_template("index.html")
 
-@app.route("/perfis-page")
+@app.route("/perfis")
 @login_required
 def perfis_page():
     return render_template("perfis.html")
 
-@app.route("/vidros-page")
+@app.route("/vidros")
 @login_required
 def vidros_page():
     return render_template("vidros.html")
@@ -78,32 +78,32 @@ def vidros_page():
 def admin_page():
     return render_template("admin.html")
 
-@app.route("/producao-page")
+@app.route("/producao")
 @login_required
 def producao_page():
     return render_template("producao.html")
 
-@app.route("/insumos-page")
+@app.route("/insumos")
 @login_required
 def insumos_page():
     return render_template("insumos.html")
 
-@app.route("/orcamentos-page")
+@app.route("/orcamentos")
 @login_required
 def orcamentos_page():
     return render_template("orcamentos.html")
 
-@app.route("/portas-page")
+@app.route("/portas")
 @login_required
 def portas_page():
     return render_template("portas.html")
 
-@app.route("/catalogo-page")
+@app.route("/catalogo")
 @login_required
 def catalogo_page():
     return render_template("catalogo.html")
 
-@app.route("/ajustes-page")
+@app.route("/ajustes")
 @login_required
 def ajustes_page():
     return render_template("ajustes.html")
