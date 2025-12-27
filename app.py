@@ -93,6 +93,11 @@ def insumos_page():
 def orcamentos_page():
     return render_template("orcamentos.html")
 
+@app.route("/portas-page")
+@login_required
+def portas_page():
+    return render_template("portas.html")
+    
 # =====================
 # LOGIN
 # =====================
