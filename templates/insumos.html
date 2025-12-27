@@ -2,7 +2,7 @@
 <html lang="pt-BR">
 <head>
     <meta charset="UTF-8">
-    <title>Materiais</title>
+    <title>Materiais / Insumos</title>
 
     <style>
         body {
@@ -26,10 +26,15 @@
             cursor: pointer;
         }
 
-        input, select {
+        input, select, div#precoFinal {
             padding: 6px;
             margin: 4px;
             width: 150px;
+        }
+
+        div#precoFinal {
+            background:#eee;
+            border-radius:4px;
         }
 
         table {
@@ -52,7 +57,7 @@
 </head>
 <body>
 
-<h1>Materiais</h1>
+<h1>Materiais / Insumos</h1>
 
 <div class="menu">
     <button onclick="window.location.href='/'">Voltar</button>
@@ -71,7 +76,7 @@
     <option value="metro_quadrado">Metro Quadrado</option>
 </select>
 <input id="margem" type="number" step="0.01" placeholder="Margem %">
-<input id="preco" type="number" step="0.01" placeholder="Preço Final">
+<div id="precoFinal">R$ 0,00</div>
 <input id="perda" type="number" step="0.01" placeholder="Perda %">
 
 <button onclick="salvar()">Salvar</button>
@@ -93,7 +98,28 @@
 </table>
 
 <script>
-    // 📦 CARREGAR MATERIAIS
+    // =====================
+    // CALCULO PRECO FINAL
+    // =====================
+    function atualizarPrecoFinal() {
+        const custo = parseFloat(document.getElementById("custo").value) || 0;
+        const margem = parseFloat(document.getElementById("margem").value) || 0;
+        const perda = parseFloat(document.getElementById("perda").value) || 0;
+
+        const custoComPerda = custo * (1 + perda / 100);
+        const preco = custoComPerda * (1 + margem / 100);
+
+        document.getElementById("precoFinal").textContent = `R$ ${preco.toFixed(2)}`;
+        return preco;
+    }
+
+    ["custo","margem","perda"].forEach(id => {
+        document.getElementById(id).addEventListener("input", atualizarPrecoFinal);
+    });
+
+    // =====================
+    // CARREGAR MATERIAIS
+    // =====================
     async function carregar() {
         const res = await fetch("/api/materiais");
         const data = await res.json();
@@ -124,27 +150,28 @@
                     <button onclick="excluir('${m.id}')">Excluir</button>
                 </td>
             `;
-
             tbody.appendChild(tr);
         });
     }
 
-    // 💾 SALVAR / ATUALIZAR
+    // =====================
+    // SALVAR / ATUALIZAR
+    // =====================
     async function salvar() {
         const id = document.getElementById("material_id").value;
         const nome = document.getElementById("nome").value;
         const custo = parseFloat(document.getElementById("custo").value);
         const tipo_medida = document.getElementById("tipo_medida").value;
         const margem = parseFloat(document.getElementById("margem").value);
-        const preco = parseFloat(document.getElementById("preco").value);
         const perda = parseFloat(document.getElementById("perda").value);
+        const preco = atualizarPrecoFinal();
 
         if (!nome || isNaN(custo) || !tipo_medida || isNaN(margem) || isNaN(preco) || isNaN(perda)) {
             alert("Preencha todos os campos corretamente");
             return;
         }
 
-        const payload = { nome, custo, tipo_medida, margem, preco, perda };
+        const payload = { nome, custo, tipo_medida, margem, perda, preco };
 
         if (id) {
             await fetch(`/api/materiais/${id}`, {
@@ -164,18 +191,22 @@
         carregar();
     }
 
-    // ✏️ EDITAR
+    // =====================
+    // EDITAR
+    // =====================
     function editar(id, nome, custo, tipo_medida, margem, preco, perda) {
         document.getElementById("material_id").value = id;
         document.getElementById("nome").value = nome;
         document.getElementById("custo").value = custo;
         document.getElementById("tipo_medida").value = tipo_medida;
         document.getElementById("margem").value = margem;
-        document.getElementById("preco").value = preco;
         document.getElementById("perda").value = perda;
+        atualizarPrecoFinal();
     }
 
-    // ❌ EXCLUIR
+    // =====================
+    // EXCLUIR
+    // =====================
     async function excluir(id) {
         if (!confirm("Excluir este material?")) return;
 
@@ -186,19 +217,25 @@
         carregar();
     }
 
-    // 🔄 CANCELAR
+    // =====================
+    // CANCELAR
+    // =====================
     function cancelar() {
         document.getElementById("material_id").value = "";
         document.getElementById("nome").value = "";
         document.getElementById("custo").value = "";
         document.getElementById("tipo_medida").value = "";
         document.getElementById("margem").value = "";
-        document.getElementById("preco").value = "";
         document.getElementById("perda").value = "";
+        document.getElementById("precoFinal").textContent = "R$ 0,00";
     }
 
+    // =====================
+    // INICIALIZAÇÃO
+    // =====================
     carregar();
 </script>
 
 </body>
 </html>
+
