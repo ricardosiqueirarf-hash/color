@@ -97,6 +97,13 @@ def orcamentos_page():
 @login_required
 def portas_page():
     return render_template("portas.html")
+
+@app.route("/api/orcamento/atual")
+@login_required
+def orcamento_atual():
+    return jsonify({
+        "uuid": session.get("orcamento_uuid")
+    })
     
 # =====================
 # LOGIN
