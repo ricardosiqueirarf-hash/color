@@ -102,6 +102,11 @@ def portas_page():
 @login_required
 def catalogo_page():
     return render_template("catalogo.html")
+
+@app.route("/ajustes-page")
+@login_required
+def ajustes_page():
+    return render_template("ajustes.html")
     
 # =====================
 # LOGIN
