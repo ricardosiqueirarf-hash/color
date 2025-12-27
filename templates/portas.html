@@ -67,13 +67,11 @@ function go(p){ window.location.href = p }
 // =====================
 const params = new URLSearchParams(window.location.search)
 const ORCAMENTO_UUID = params.get("orcamento_uuid")
-
 if(!ORCAMENTO_UUID){
     document.getElementById("infoOrcamento").innerHTML =
         "<strong style='color:red'>UUID do orçamento não encontrado</strong>"
     throw new Error("orcamento_uuid ausente")
 }
-
 document.getElementById("infoOrcamento").innerHTML =
     `Editando orçamento: <strong>${ORCAMENTO_UUID}</strong>`
 
@@ -88,20 +86,25 @@ const TIPOLOGIAS = {
 }
 
 // =====================
-// CARREGAR PERFIS DO SUPABASE
+// CARREGAR PERFIS E VIDROS
 // =====================
 let todosPerfis = []
+let todosVidros = []
 
 async function carregarPerfis() {
     try {
         const res = await fetch("/api/perfis")
-        const data = await res.json()
-        todosPerfis = data
+        todosPerfis = await res.json()
         atualizarPerfisSelect()
-    } catch(err) {
-        console.error("Erro ao carregar perfis:", err)
-        alert("Erro ao carregar perfis do Supabase")
-    }
+    } catch(err) { console.error(err) }
+}
+
+async function carregarVidros() {
+    try {
+        const res = await fetch("/api/vidros")
+        todosVidros = await res.json()
+        atualizarVidrosSelect()
+    } catch(err) { console.error(err) }
 }
 
 function atualizarPerfisSelect() {
@@ -109,31 +112,13 @@ function atualizarPerfisSelect() {
     const perfilSelect = document.getElementById("perfil")
     if(!perfilSelect) return
     perfilSelect.innerHTML = "<option value=''>Selecione</option>"
-    todosPerfis
-        .filter(p => p.tipologias.includes(tipo))
+    todosPerfis.filter(p => p.tipologias.includes(tipo))
         .forEach(p => {
             const opt = document.createElement("option")
             opt.value = p.id
-            opt.textContent = p.nome
+            opt.textContent = `${p.nome} - R$ ${p.preco}/m`
             perfilSelect.appendChild(opt)
         })
-}
-
-// =====================
-// CARREGAR VIDROS DO SUPABASE
-// =====================
-let todosVidros = []
-
-async function carregarVidros() {
-    try {
-        const res = await fetch("/api/vidros")
-        const data = await res.json()
-        todosVidros = data
-        atualizarVidrosSelect()
-    } catch(err) {
-        console.error("Erro ao carregar vidros:", err)
-        alert("Erro ao carregar vidros do Supabase")
-    }
 }
 
 function atualizarVidrosSelect() {
@@ -142,10 +127,44 @@ function atualizarVidrosSelect() {
     vidroSelect.innerHTML = "<option value=''>Selecione</option>"
     todosVidros.forEach(v => {
         const opt = document.createElement("option")
-        opt.value = v.id || v.tipo
-        opt.textContent = v.tipo + (v.espessura ? ` - ${v.espessura}mm` : "")
+        opt.value = v.id
+        opt.textContent = `${v.tipo}${v.espessura ? " " + v.espessura+"mm" : ""} - R$ ${v.preco}/m²`
         vidroSelect.appendChild(opt)
     })
+}
+
+// =====================
+// CALCULO PREÇO PORTA
+// =====================
+function calcularPrecoPorta(){
+    const largura = parseFloat(document.getElementById("largura")?.value)/1000 || 0 // em metros
+    const altura = parseFloat(document.getElementById("altura")?.value)/1000 || 0
+    const perfilId = document.getElementById("perfil")?.value
+    const vidroId = document.getElementById("vidro")?.value
+
+    let precoPerfil = 0, precoVidro = 0
+
+    if(perfilId){
+        const perfil = todosPerfis.find(p => p.id == perfilId)
+        if(perfil) precoPerfil = perfil.preco * largura // m linear
+    }
+
+    if(vidroId){
+        const vidro = todosVidros.find(v => v.id == vidroId)
+        if(vidro) precoVidro = vidro.preco * largura * altura // m²
+    }
+
+    return precoPerfil + precoVidro
+}
+
+function atualizarPrecoPorta(){
+    const preco = calcularPrecoPorta()
+    document.getElementById("precoPorta")?.remove()
+    const label = document.createElement("div")
+    label.id = "precoPorta"
+    label.style.marginTop = "10px"
+    label.innerHTML = `<strong>Preço estimado: R$ ${preco.toFixed(2)}</strong>`
+    document.getElementById("campos").appendChild(label)
 }
 
 // =====================
@@ -160,10 +179,10 @@ function renderCampos(){
     TIPOLOGIAS[tipo].forEach(c=>{
         const label = document.createElement("label")
         switch(c){
-            case "largura": label.innerHTML=`Largura (mm)<input type="number" id="largura" value="800" oninput="desenharPorta()">`; break
-            case "altura": label.innerHTML=`Altura (mm)<input type="number" id="altura" value="2000" oninput="desenharPorta()">`; break
-            case "perfil": label.innerHTML=`Perfil<select id="perfil"><option>Padrão</option></select>`; break
-            case "vidro": label.innerHTML=`Vidro<select id="vidro"><option>Padrão</option></select>`; break
+            case "largura": label.innerHTML=`Largura (mm)<input type="number" id="largura" value="800" oninput="desenharPorta(); atualizarPrecoPorta()">`; break
+            case "altura": label.innerHTML=`Altura (mm)<input type="number" id="altura" value="2000" oninput="desenharPorta(); atualizarPrecoPorta()">`; break
+            case "perfil": label.innerHTML=`Perfil<select id="perfil" onchange="atualizarPrecoPorta()"><option>Padrão</option></select>`; break
+            case "vidro": label.innerHTML=`Vidro<select id="vidro" onchange="atualizarPrecoPorta()"><option>Padrão</option></select>`; break
             case "trilho": label.innerHTML=`Trilho<select id="trilho"><option>Padrão</option></select>`; break
             case "qtd_folhas": label.innerHTML=`Qtd Folhas<input type="number" id="qtd_folhas" value="2" oninput="desenharPorta()">`; break
             case "dobradica": label.innerHTML=`Dobradiça<select id="dobradica"><option>Padrão</option></select>`; break
@@ -174,6 +193,7 @@ function renderCampos(){
     desenharPorta()
     atualizarPerfisSelect()
     atualizarVidrosSelect()
+    atualizarPrecoPorta()
 }
 
 // =====================
@@ -222,13 +242,14 @@ function salvarPorta(){
     })
 
     const svg=document.getElementById("portaSVG").outerHTML
+    const preco = calcularPrecoPorta()
 
     if(editando!==null){
         const p=portas.find(p=>p.id===editando)
-        Object.assign(p,{tipo,dados,svg})
+        Object.assign(p,{tipo,dados,svg,preco})
         editando=null
     } else {
-        portas.push({id:idCounter++,tipo,dados,svg})
+        portas.push({id:idCounter++,tipo,dados,svg,preco})
     }
 
     renderPortas()
@@ -241,8 +262,9 @@ function renderPortas(){
         const div=document.createElement("div")
         div.innerHTML=`<strong>${p.tipo}</strong><br>`+
             Object.entries(p.dados).map(([k,v])=>`${k}: ${v}`).join("<br>")+ "<br>" +
-            (p.dados.perfil ? `Perfil: ${todosPerfis.find(f=>f.id===p.dados.perfil)?.nome || "N/A"}<br>` : "") +
-            (p.dados.vidro ? `Vidro: ${todosVidros.find(f=>f.id===p.dados.vidro)?.tipo || "N/A"}<br>` : "") +
+            (p.dados.perfil ? `Perfil: ${todosPerfis.find(f=>f.id==p.dados.perfil)?.nome || "N/A"}<br>` : "") +
+            (p.dados.vidro ? `Vidro: ${todosVidros.find(f=>f.id==p.dados.vidro)?.tipo || "N/A"}<br>` : "") +
+            `<strong>Preço: R$ ${p.preco.toFixed(2)}</strong><br>` +
             p.svg
 
         const btn=document.createElement("button")
@@ -265,6 +287,7 @@ function editarPorta(id){
         if(el) el.value=p.dados[k]
     })
     desenharPorta()
+    atualizarPrecoPorta()
 }
 
 // =====================
@@ -273,6 +296,7 @@ function editarPorta(id){
 carregarPerfis()
 carregarVidros()
 </script>
+
 
 </body>
 </html>
