@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catálogo de Perfis</title>
+<style>
+body { font-family: Arial, sans-serif; background:#f5f5f5; margin:0; padding:20px; }
+h1 { margin-bottom:20px; }
+.catalogo { display:grid; grid-template-columns:repeat(auto-fill,minmax(280px,1fr)); gap:20px; }
+.card { background:white; padding:15px; border-radius:8px; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+.card h3 { margin-top:0; }
+.perfil-info { margin:8px 0; font-size:0.9rem; }
+.cores { display:flex; gap:5px; margin-top:5px; }
+.cor { width:20px; height:20px; border-radius:4px; border:1px solid #ccc; }
+.cor.preto { background:#000; }
+.cor.prata { background:silver; }
+.cor.bronze { background:#cd7f32; }
+</style>
+</head>
+<body>
+
+<h1>Catálogo de Perfis de Alumínio</h1>
+<div class="catalogo" id="catalogo"></div>
+
+<script>
+// =====================
+// Exemplo de dados (vai vir do backend via fetch depois)
+// =====================
+const perfis = [
+    {nome:"Perfil 1036", tipologias:["Giro","Correr"], cores:["preto","prata"], descricao:"Porta de giro, correr, deslizante"},
+    {nome:"Perfil 088", tipologias:["Giro"], cores:["preto","bronze"], descricao:"Usado como puxador, compatível com giro"},
+    {nome:"Perfil 2215", tipologias:["Correr"], cores:["prata","bronze"], descricao:"Porta de correr"}
+];
+
+// =====================
+// Renderizar catálogo
+// =====================
+function renderCatalogo() {
+    const container = document.getElementById("catalogo");
+    container.innerHTML = "";
+    perfis.forEach(p => {
+        const card = document.createElement("div");
+        card.className = "card";
+
+        card.innerHTML = `
+            <h3>${p.nome}</h3>
+            <div class="perfil-info"><strong>Para:</strong> ${p.tipologias.join(", ")}</div>
+            <div class="perfil-info"><strong>Descrição:</strong> ${p.descricao}</div>
+            <div class="perfil-info"><strong>Cores disponíveis:</strong></div>
+            <div class="cores">
+                ${p.cores.map(c => `<div class="cor ${c}" title="${c}"></div>`).join("")}
+            </div>
+        `;
+
+        container.appendChild(card);
+    });
+}
+
+renderCatalogo();
+</script>
+</body>
+</html>
