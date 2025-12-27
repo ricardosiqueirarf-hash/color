@@ -14,8 +14,10 @@ h1 { margin-bottom:20px; }
 .cores { display:flex; gap:5px; margin-top:5px; }
 .cor { width:20px; height:20px; border-radius:4px; border:1px solid #ccc; }
 .cor.preto { background:#000; }
-.cor.prata { background:silver; }
-.cor.bronze { background:#cd7f32; }
+.cor.prata { background:#c6c7c9; }
+.cor.bronze1001 { background:#716859; }
+.cor.dourado { backgroud:#B89C5D; }
+.cor.inox {background:#918B82; }
 </style>
 </head>
 <body>
@@ -28,9 +30,9 @@ h1 { margin-bottom:20px; }
 // Exemplo de dados (vai vir do backend via fetch depois)
 // =====================
 const perfis = [
-    {nome:"Perfil 1036", tipologias:["Giro","Correr"], cores:["preto","prata"], descricao:"Porta de giro, correr, deslizante"},
-    {nome:"Perfil 088", tipologias:["Giro"], cores:["preto","bronze"], descricao:"Usado como puxador, compatível com giro"},
-    {nome:"Perfil 2215", tipologias:["Correr"], cores:["prata","bronze"], descricao:"Porta de correr"}
+    {nome:"Perfil Clássico", tipologias:["Giro","Correr"], cores:["prata", "bronze", "inox", "dourado", "preto"], descricao:"Porta de giro, correr, deslizante"},
+    {nome:"Perfil Slim", tipologias:["Giro"], cores:["prata","inox", "preto"], descricao:"Usado como puxador, compatível com giro"},
+    {nome:"Perfil Invisível", tipologias:["Correr"], cores:["prata", "bronze", "inox", "dourado", "preto"], descricao:"Porta de correr"}
 ];
 
 // =====================
