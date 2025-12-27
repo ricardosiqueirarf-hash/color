@@ -30,18 +30,13 @@ th { background:#ddd; }
         <button onclick="go('/')">Home</button>
         <button onclick="go('/perfis-page')">Perfis</button>
         <button onclick="go('/vidros-page')">Vidros</button>
-        <button onclick="go('/producao-page')">producao</button>
-        <button onclick="go('/insumos-page')">insumos</button
-        <button onclick="go('/insumos-page')">insumos</button>
-        <button onclick="go('/orcamentos-page')">orcamentos</button>        
+        <button onclick="go('/producao-page')">Produção</button>
+        <button onclick="go('/insumos-page')">Insumos</button>
+        <button onclick="go('/orcamentos-page')">Orçamentos</button>        
     </div>
 
     <div class="content">
         <h1>Orçamento de Portas</h1>
-
-        <!-- ORÇAMENTOS EXISTENTES -->
-        <h2>Orçamentos Existentes</h2>
-        <div id="orcamentosExistentes"><em>Carregando...</em></div>
 
         <!-- FORMULÁRIO FICHA DO CLIENTE -->
         <div id="formCliente">
@@ -49,49 +44,106 @@ th { background:#ddd; }
             <button class="btn" onclick="criarFichaCliente()">Criar Ficha</button>
         </div>
 
-        <!-- ORÇAMENTOS EXISTENTES (AGORA AQUI) -->
+        <!-- ORÇAMENTOS EXISTENTES -->
         <h2>Orçamentos Existentes</h2>
         <div id="orcamentosExistentes"><em>Carregando...</em></div>
 
         <!-- FORMULÁRIO PORTA -->
         <div id="formPorta" style="display:none;">
             <label>
-@@ -96,14 +96,27 @@
+                Tipologia
+                <select id="tipologia" onchange="renderCampos()">
+                    <option value="">Selecione</option>
+                    <option value="giro">Porta de Giro</option>
+                    <option value="deslizante">Porta Deslizante</option>
+                    <option value="correr">Porta de Correr</option>
+                    <option value="pivotante">Porta Pivotante</option>
+                </select>
+            </label>
+
+            <div class="row" id="campos"></div>
+
+            <button class="btn" onclick="salvarPorta()">Salvar Porta</button>
+
+            <svg id="portaSVG" width="200" height="400" style="border:1px solid #000; margin-top:10px;"></svg>
+        </div>
+
+        <h2>Portas Salvas</h2>
+        <div id="portasSalvas"></div>
+
+        <button class="btn" onclick="salvarOrcamento()" style="margin-top:20px;">
+            Salvar Orçamento Final
+        </button>
+    </div>
+</div>
+
+<script>
+function go(p){ window.location.href = p }
+
+// =====================
+// CARREGAR ORÇAMENTOS EXISTENTES
+// =====================
+function carregarOrcamentos() {
+    fetch('/api/orcamentos')
+    .then(res => res.json())
+    .then(data => {
+        const container = document.getElementById("orcamentosExistentes");
+        container.innerHTML = "";
+
+        const orcamentos = data.orcamentos || [];
+        if(orcamentos.length === 0){
+            container.innerHTML = "<em>Nenhum orçamento encontrado.</em>";
+            return;
+        }
 
         const table = document.createElement("table");
-        const thead = document.createElement("thead");
-        thead.innerHTML = `<tr><th># Pedido</th><th>Cliente</th><th>Data Criação</th></tr>`;
-        thead.innerHTML = `
-            <tr>
-                <th># Pedido</th>
-                <th>Cliente</th>
-                <th>Data Criação</th>
-                <th>Ações</th>
-            </tr>`;
-        table.appendChild(thead);
+        table.innerHTML = `
+            <thead>
+                <tr>
+                    <th># Pedido</th>
+                    <th>Cliente</th>
+                    <th>Data Criação</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        `;
 
-        const tbody = document.createElement("tbody");
+        const tbody = table.querySelector("tbody");
+
         orcamentos.forEach(o => {
             const tr = document.createElement("tr");
-            const dataCriacao = o.data_criacao ? new Date(o.data_criacao).toLocaleString() : "";
-            tr.innerHTML = `<td>${o.numero_pedido}</td><td>${o.cliente_nome}</td><td>${dataCriacao}</td>`;
+            const dataCriacao = o.data_criacao
+                ? new Date(o.data_criacao).toLocaleString()
+                : "";
+
             tr.innerHTML = `
                 <td>${o.numero_pedido}</td>
                 <td>${o.cliente_nome}</td>
                 <td>${dataCriacao}</td>
                 <td>
-                    <button class="btn" onclick="editarOrcamento('${o.id}')">Editar</button>
+                    <button class="btn" onclick="editarOrcamento('${o.id}')">
+                        Editar
+                    </button>
                 </td>
             `;
             tbody.appendChild(tr);
         });
-        table.appendChild(tbody);
-@@ -116,162 +129,166 @@
+
+        container.appendChild(table);
+    })
+    .catch(err=>{
+        console.error("Erro ao carregar orçamentos:", err);
+        document.getElementById("orcamentosExistentes").innerHTML =
+            "<em>Erro ao carregar orçamentos.</em>";
+    });
 }
 carregarOrcamentos();
 
+// 🔥 AQUI ESTÁ O PONTO-CHAVE 🔥
+// UUID DO ORÇAMENTO É MANTIDO NA URL
 function editarOrcamento(uuid){
-    window.location.href = `portas.html?orcamento_uuid=${uuid}`;
+    window.location.href = `portas.html?orcamento_uuid=${encodeURIComponent(uuid)}`;
 }
 
 // =====================
@@ -103,7 +155,11 @@ let idCounter = 0;
 
 async function criarFichaCliente(){
     const nome = document.getElementById("clienteNome").value.trim();
-    if(!nome){ alert("Digite o nome do cliente"); return }
+    if(!nome){
+        alert("Digite o nome do cliente");
+        return;
+    }
+
     cliente.nome = nome;
 
     try {
@@ -116,21 +172,21 @@ async function criarFichaCliente(){
 
         if(data.success){
             cliente.id = data.id;
-            alert("Ficha criada com sucesso! ID: "+data.id);
+            alert("Ficha criada com sucesso! ID: " + data.id);
             document.getElementById("formCliente").style.display="none";
             document.getElementById("formPorta").style.display="block";
             carregarOrcamentos();
         } else {
-            alert("Erro ao criar ficha: "+data.error);
+            alert("Erro ao criar ficha: " + data.error);
         }
     } catch(err) {
-        console.error("Erro no fetch criarFichaCliente:", err);
+        console.error("Erro criarFichaCliente:", err);
         alert("Erro ao criar ficha, veja o console.");
     }
 }
 
 // =====================
-// TIPOS DE PORTA
+// TIPOLOGIAS
 // =====================
 const TIPOLOGIAS = {
     giro: ["largura","altura","perfil","vidro","dobradica"],
@@ -163,94 +219,36 @@ function renderCampos(){
 }
 
 // =====================
-// DESENHAR PORTA
+// DESENHO SVG
 // =====================
 function desenharPorta(){
-    const larguraInput = document.getElementById("largura")
-    const alturaInput = document.getElementById("altura")
-    const svg = document.getElementById("portaSVG")
-    if(!larguraInput||!alturaInput||!svg) return
+    const larguraInput = document.getElementById("largura");
+    const alturaInput = document.getElementById("altura");
+    const svg = document.getElementById("portaSVG");
+    if(!larguraInput || !alturaInput || !svg) return;
 
-    const largura = parseFloat(larguraInput.value)
-    const altura = parseFloat(alturaInput.value)
-    svg.innerHTML=''
-    const maxSVGWidth=svg.clientWidth
-    const maxSVGHeight=svg.clientHeight
-    const padding=10
-    const scale=Math.min((maxSVGWidth-2*padding)/largura,(maxSVGHeight-2*padding)/altura)
-    const rectWidth=largura*scale
-    const rectHeight=altura*scale
-    const rect=document.createElementNS("http://www.w3.org/2000/svg","rect")
-    rect.setAttribute("x",(maxSVGWidth-rectWidth)/2)
-    rect.setAttribute("y",(maxSVGHeight-rectHeight)/2)
-    rect.setAttribute("width",rectWidth)
-    rect.setAttribute("height",rectHeight)
-    rect.setAttribute("fill","#ccc")
-    rect.setAttribute("stroke","#000")
-    rect.setAttribute("stroke-width","6")
-    rect.setAttribute("vector-effect","non-scaling-stroke")
-    svg.appendChild(rect)
-}
+    const largura = parseFloat(larguraInput.value);
+    const altura = parseFloat(alturaInput.value);
 
-// =====================
-// SALVAR PORTAS (LOCAL)
-// =====================
-let portaEditandoId=null
+    svg.innerHTML='';
+    const maxW=svg.clientWidth, maxH=svg.clientHeight, pad=10;
+    const scale=Math.min((maxW-2*pad)/largura,(maxH-2*pad)/altura);
 
-function salvarPorta(){
-    const tipologia=document.getElementById("tipologia").value
-    if(!tipologia){ alert("Selecione tipologia"); return }
+    const rect=document.createElementNS("http://www.w3.org/2000/svg","rect");
+    rect.setAttribute("x",(maxW-largura*scale)/2);
+    rect.setAttribute("y",(maxH-altura*scale)/2);
+    rect.setAttribute("width",largura*scale);
+    rect.setAttribute("height",altura*scale);
+    rect.setAttribute("fill","#ccc");
+    rect.setAttribute("stroke","#000");
+    rect.setAttribute("stroke-width","6");
+    rect.setAttribute("vector-effect","non-scaling-stroke");
 
-    const dados={}
-    TIPOLOGIAS[tipologia].forEach(c=>{
-        const el=document.getElementById(c)
-        if(el) dados[c]=el.value
-    })
-    const svg=document.getElementById("portaSVG").outerHTML
-
-    if(portaEditandoId!==null){
-        const porta=portasSalvas.find(p=>p.id===portaEditandoId)
-        if(porta){ porta.tipologia=tipologia; porta.dados=dados; porta.svg=svg }
-        portaEditandoId=null
-    } else {
-        const id=idCounter++
-        portasSalvas.push({id,tipologia,dados,svg})
-    }
-    renderPortasSalvas()
-}
-
-function renderPortasSalvas(){
-    const container=document.getElementById("portasSalvas")
-    container.innerHTML=""
-    portasSalvas.forEach(p=>{
-        const div=document.createElement("div")
-        let info=`<strong>Porta ${p.id} - ${p.tipologia}</strong><br>`
-        for(let k in p.dados) info+=`${k}: ${p.dados[k]}<br>`
-        div.innerHTML=info+p.svg
-        const btnEditar=document.createElement("button")
-        btnEditar.textContent="Editar"
-        btnEditar.className="btn"
-        btnEditar.style.marginTop="5px"
-        btnEditar.onclick=()=>editarPorta(p.id)
-        div.appendChild(btnEditar)
-        container.appendChild(div)
-    })
-}
-
-function editarPorta(id){
-    const porta=portasSalvas.find(p=>p.id===id)
-    if(!porta) return
-    portaEditandoId=id
-    document.getElementById("tipologia").value=porta.tipologia
-    renderCampos()
-    TIPOLOGIAS[porta.tipologia].forEach(c=>{
-        const el=document.getElementById(c)
-        if(el) el.value=porta.dados[c]
-    })
-    desenharPorta()
+    svg.appendChild(rect);
 }
 </script>
 
 </body>
 </html>
+
 
