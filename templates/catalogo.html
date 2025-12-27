@@ -18,19 +18,25 @@ h1 { margin-bottom:20px; }
 .cor.prata { background:#c6c7c9; }
 .cor.bronze1001 { background:#716859; }
 .cor.dourado { background:#B89C5D; }
-.cor.inox {background:#918B82; }
+.cor.inox { background:#918B82; }
 </style>
 </head>
 <body>
 
 <h1>Catálogo de Perfis de Alumínio</h1>
-<div class="catalogo" id="catalogo"><em>Carregando...</em></div>
+<div class="catalogo" id="catalogo"></div>
 
 <script>
-// URL do backend no Render
-const backendURL = "https://colorglass.onrender.com";
+// =====================
+// Dados estáticos
+// =====================
+const perfis = [
+    {nome:"Perfil Clássico", imagem:"1036AL.png", tipologias:["Giro","Correr"], cores:["prata", "bronze1001", "inox", "dourado", "preto"], descricao:"Porta de giro, correr, deslizante"},
+    {nome:"Perfil Slim", imagem:"3545AL.png", tipologias:["Giro"], cores:["prata","inox", "preto"], descricao:"Usado como puxador, compatível com giro"},
+    {nome:"Perfil Invisível", imagem:"3446AL.png", tipologias:["Correr"], cores:["prata", "bronze1001", "inox", "dourado", "preto"], descricao:"Porta de correr"}
+];
 
-// Mapa de nomes legíveis das cores
+// Map de nomes legíveis das cores
 const nomesCores = {
     preto: "Preto",
     prata: "Prata",
@@ -40,38 +46,16 @@ const nomesCores = {
 };
 
 // =====================
-// Buscar perfis do backend
-// =====================
-async function fetchPerfis() {
-    try {
-        const res = await fetch(`${backendURL}/api/perfis`);
-        const data = await res.json();
-        return data.perfis || [];
-    } catch(err) {
-        console.error("Erro ao buscar perfis:", err);
-        return [];
-    }
-}
-
-// =====================
 // Renderizar catálogo
 // =====================
-async function renderCatalogo() {
+function renderCatalogo() {
     const container = document.getElementById("catalogo");
     container.innerHTML = "";
-    const perfis = await fetchPerfis();
-
-    if(perfis.length === 0){
-        container.innerHTML = "<em>Nenhum perfil encontrado.</em>";
-        return;
-    }
-
     perfis.forEach(p => {
         const card = document.createElement("div");
         card.className = "card";
-
         card.innerHTML = `
-            <img src="/static/${p.imagem}" alt="${p.nome}">
+            <img src="${p.imagem}" alt="${p.nome}">
             <h3>${p.nome}</h3>
             <div class="perfil-info"><strong>Para:</strong> ${p.tipologias.join(", ")}</div>
             <div class="perfil-info"><strong>Descrição:</strong> ${p.descricao}</div>
@@ -80,14 +64,13 @@ async function renderCatalogo() {
                 ${p.cores.map(c => `<div class="cor ${c}" title="${nomesCores[c] || c}"></div>`).join("")}
             </div>
         `;
-
         container.appendChild(card);
     });
 }
 
-// Rodar render
 renderCatalogo();
 </script>
 </body>
 </html>
+
 
