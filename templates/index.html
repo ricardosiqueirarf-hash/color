@@ -4,26 +4,36 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Orçamento de Portas</title>
+
+<!-- CSS principal -->
 <style>
 body { margin:0; font-family:Arial, Helvetica, sans-serif; background:#f2f2f2; }
 .app { display:grid; grid-template-columns:18% 82%; height:100vh; }
 .sidebar { background:#1e1e1e; color:white; padding:20px; display:flex; flex-direction:column; gap:10px; }
 .sidebar button { padding:10px; border:none; background:#333; color:white; border-radius:6px; cursor:pointer; }
 .content { padding:25px; overflow-y:auto; height:100vh; }
-.row { display:flex; gap:15px; flex-wrap:wrap; margin-top:10px; }
 label { display:flex; flex-direction:column; font-size:0.9rem; width:180px; }
-input, select { padding:7px; margin-top:5px; }
+input { padding:7px; margin-top:5px; }
 .btn { padding:10px 16px; border:none; border-radius:6px; cursor:pointer; background:#0078d7; color:white; margin-top:10px; }
 .btn-danger { background:#c0392b; }
-#formPorta, #formCliente { background:white; padding:15px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,.1); }
+#formCliente { background:white; padding:15px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,.1); }
 #portasSalvas div { margin-bottom:10px; border:1px solid #333; padding:10px; background:#f0f0f0; }
 table { border-collapse: collapse; width:100%; }
 th, td { border:1px solid #ccc; padding:5px; text-align:left; }
 th { background:#ddd; }
 </style>
+
+<!-- CSS dark mode externo -->
+<link id="tema-css" rel="stylesheet" href="">
+<script>
+// Verifica se dark mode está ativo no localStorage
+if(localStorage.getItem("darkmode") === "true"){
+    document.getElementById("tema-css").href = "/static/css/indexdark.css";
+}
+</script>
+
 </head>
 <body>
-
 <div class="app">
     <div class="sidebar">
         <h3>ColorGlass</h3>
@@ -34,7 +44,6 @@ th { background:#ddd; }
         <button onclick="go('/insumos-page')">Insumos</button>
         <button onclick="go('/catalogo-page')">catalogo</button>
         <button onclick="go('/ajustes-page')">ajustes</button>   
-        
     </div>
 
     <div class="content">
@@ -49,26 +58,6 @@ th { background:#ddd; }
         <!-- ORÇAMENTOS EXISTENTES -->
         <h2>Orçamentos Existentes</h2>
         <div id="orcamentosExistentes"><em>Carregando...</em></div>
-
-        <!-- FORMULÁRIO PORTA -->
-        <div id="formPorta" style="display:none;">
-            <label>
-                Tipologia
-                <select id="tipologia" onchange="renderCampos()">
-                    <option value="">Selecione</option>
-                    <option value="giro">Porta de Giro</option>
-                    <option value="deslizante">Porta Deslizante</option>
-                    <option value="correr">Porta de Correr</option>
-                    <option value="pivotante">Porta Pivotante</option>
-                </select>
-            </label>
-
-            <div class="row" id="campos"></div>
-
-            <button class="btn" onclick="salvarPorta()">Salvar Porta</button>
-
-            <svg id="portaSVG" width="200" height="400" style="border:1px solid #000; margin-top:10px;"></svg>
-        </div>
 
         <h2>Portas Salvas</h2>
         <div id="portasSalvas"></div>
@@ -142,8 +131,7 @@ function carregarOrcamentos() {
 }
 carregarOrcamentos();
 
-// 🔥 AQUI ESTÁ O PONTO-CHAVE 🔥
-// UUID DO ORÇAMENTO É MANTIDO NA URL
+// 🔥 UUID DO ORÇAMENTO É MANTIDO NA URL
 function editarOrcamento(uuid){
     window.location.href = `/portas-page?orcamento_uuid=${encodeURIComponent(uuid)}`;
 }
@@ -176,7 +164,6 @@ async function criarFichaCliente(){
             cliente.id = data.id;
             alert("Ficha criada com sucesso! ID: " + data.id);
             document.getElementById("formCliente").style.display="none";
-            document.getElementById("formPorta").style.display="block";
             carregarOrcamentos();
         } else {
             alert("Erro ao criar ficha: " + data.error);
@@ -186,71 +173,9 @@ async function criarFichaCliente(){
         alert("Erro ao criar ficha, veja o console.");
     }
 }
-
-// =====================
-// TIPOLOGIAS
-// =====================
-const TIPOLOGIAS = {
-    giro: ["largura","altura","perfil","vidro","dobradica"],
-    deslizante: ["largura","altura","perfil","vidro","trilho","qtd_folhas"],
-    correr: ["largura","altura","perfil","vidro","trilho","qtd_folhas"],
-    pivotante: ["largura","altura","perfil","vidro","pivo"]
-};
-
-function renderCampos(){
-    const tipo = document.getElementById("tipologia").value;
-    const container = document.getElementById("campos");
-    container.innerHTML = "";
-    if(!TIPOLOGIAS[tipo]) return;
-
-    TIPOLOGIAS[tipo].forEach(c=>{
-        const label = document.createElement("label");
-        switch(c){
-            case "largura": label.innerHTML=`Largura (mm)<input type="number" id="largura" value="800" oninput="desenharPorta()">`; break;
-            case "altura": label.innerHTML=`Altura (mm)<input type="number" id="altura" value="2000" oninput="desenharPorta()">`; break;
-            case "perfil": label.innerHTML=`Perfil<select id="perfil"><option>Padrão</option></select>`; break;
-            case "vidro": label.innerHTML=`Vidro<select id="vidro"><option>Padrão</option></select>`; break;
-            case "trilho": label.innerHTML=`Trilho<select id="trilho"><option>Padrão</option></select>`; break;
-            case "qtd_folhas": label.innerHTML=`Qtd Folhas<input type="number" id="qtd_folhas" value="2" oninput="desenharPorta()">`; break;
-            case "dobradica": label.innerHTML=`Dobradiça<select id="dobradica"><option>Padrão</option></select>`; break;
-            case "pivo": label.innerHTML=`Pivô<select id="pivo"><option>Superior</option></select>`; break;
-        }
-        container.appendChild(label);
-    });
-    desenharPorta();
-}
-
-// =====================
-// DESENHO SVG
-// =====================
-function desenharPorta(){
-    const larguraInput = document.getElementById("largura");
-    const alturaInput = document.getElementById("altura");
-    const svg = document.getElementById("portaSVG");
-    if(!larguraInput || !alturaInput || !svg) return;
-
-    const largura = parseFloat(larguraInput.value);
-    const altura = parseFloat(alturaInput.value);
-
-    svg.innerHTML='';
-    const maxW=svg.clientWidth, maxH=svg.clientHeight, pad=10;
-    const scale=Math.min((maxW-2*pad)/largura,(maxH-2*pad)/altura);
-
-    const rect=document.createElementNS("http://www.w3.org/2000/svg","rect");
-    rect.setAttribute("x",(maxW-largura*scale)/2);
-    rect.setAttribute("y",(maxH-altura*scale)/2);
-    rect.setAttribute("width",largura*scale);
-    rect.setAttribute("height",altura*scale);
-    rect.setAttribute("fill","#ccc");
-    rect.setAttribute("stroke","#000");
-    rect.setAttribute("stroke-width","6");
-    rect.setAttribute("vector-effect","non-scaling-stroke");
-
-    svg.appendChild(rect);
-}
 </script>
-
 </body>
 </html>
+
 
 
