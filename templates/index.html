@@ -71,11 +71,14 @@ if(localStorage.getItem("darkmode") === "true"){
 <script>
 function go(p){ window.location.href = p }
 
+// URL base do backend no Render
+const BACKEND_URL = "https://colorglass.onrender.com";
+
 // =====================
 // CARREGAR ORÇAMENTOS EXISTENTES
 // =====================
 function carregarOrcamentos() {
-    fetch('/api/orcamentos')
+    fetch(`${BACKEND_URL}/api/orcamentos`)
     .then(res => res.json())
     .then(data => {
         const container = document.getElementById("orcamentosExistentes");
@@ -153,7 +156,7 @@ async function criarFichaCliente(){
     cliente.nome = nome;
 
     try {
-        const res = await fetch('/api/orcamento', {
+        const res = await fetch(`${BACKEND_URL}/api/orcamento`, {
             method:'POST',
             headers:{'Content-Type':'application/json'},
             body:JSON.stringify({cliente_nome: cliente.nome})
@@ -177,7 +180,6 @@ async function criarFichaCliente(){
 </body>
 </html>
 
-</html>
 
 
 
