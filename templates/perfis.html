@@ -193,9 +193,12 @@ function editar(p) {
 
     const container = document.getElementById("insumos-container");
     container.innerHTML = "";
-    (p.insumos||[]).forEach(insumo=>{
-        const div=document.createElement("div");
-        div.className="insumo-item";
+
+    const insumosDoPerfil = p.insumos?.length ? p.insumos : [""];
+
+    insumosDoPerfil.forEach(insumo=>{
+        const div = document.createElement("div");
+        div.className = "insumo-item";
         div.innerHTML = `
             <select class="insumo-select"></select>
             <button type="button" onclick="adicionarInsumo(this)">+</button>
@@ -203,16 +206,14 @@ function editar(p) {
         `;
         container.appendChild(div);
     });
-    if((p.insumos||[]).length===0){
-        const div=document.createElement("div");
-        div.className="insumo-item";
-        div.innerHTML = `
-            <select class="insumo-select"></select>
-            <button type="button" onclick="adicionarInsumo(this)">+</button>
-        `;
-        container.appendChild(div);
-    }
+
     atualizarSelects();
+
+    // Aqui é que corrigimos: setamos o valor de cada select
+    const selects = document.querySelectorAll(".insumo-select");
+    selects.forEach((select, idx)=>{
+        select.value = insumosDoPerfil[idx] || "";
+    });
 }
 
 async function excluir(id){
