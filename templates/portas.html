@@ -146,7 +146,7 @@ function calcularPrecoPorta(){
 
     if(perfilId){
         const perfil = todosPerfis.find(p => p.id == perfilId)
-        if(perfil) precoPerfil = perfil.preco * largura // m linear
+        if(perfil) precoPerfil = perfil.preco * 2 * (largura + altura) // m linear do perímetro
     }
 
     if(vidroId){
