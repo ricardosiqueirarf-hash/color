@@ -26,7 +26,7 @@ th { background:#ddd; }
 <!-- CSS dark mode externo -->
 <link id="tema-css" rel="stylesheet" href="">
 <script>
-// Verifica se dark mode está ativo no localStorage
+// Aplica dark mode se estiver ativado no localStorage
 if(localStorage.getItem("darkmode") === "true"){
     document.getElementById("tema-css").href = "/static/css/indexdark.css";
 }
@@ -42,8 +42,8 @@ if(localStorage.getItem("darkmode") === "true"){
         <button onclick="go('/vidros-page')">Vidros</button>
         <button onclick="go('/producao-page')">Produção</button>
         <button onclick="go('/insumos-page')">Insumos</button>
-        <button onclick="go('/catalogo-page')">catalogo</button>
-        <button onclick="go('/ajustes-page')">ajustes</button>   
+        <button onclick="go('/catalogo-page')">Catálogo</button>
+        <button onclick="go('/ajustes-page')">Ajustes</button>   
     </div>
 
     <div class="content">
@@ -175,6 +175,8 @@ async function criarFichaCliente(){
 }
 </script>
 </body>
+</html>
+
 </html>
 
 
