@@ -104,7 +104,6 @@ async function carregarPerfis() {
     }
 }
 
-// Atualiza o select de perfis de acordo com a tipologia selecionada
 function atualizarPerfisSelect() {
     const tipo = document.getElementById("tipologia").value
     const perfilSelect = document.getElementById("perfil")
@@ -137,15 +136,14 @@ async function carregarVidros() {
     }
 }
 
-// Atualiza o select de vidros (sem filtro)
 function atualizarVidrosSelect() {
     const vidroSelect = document.getElementById("vidro")
     if(!vidroSelect) return
     vidroSelect.innerHTML = "<option value=''>Selecione</option>"
     todosVidros.forEach(v => {
         const opt = document.createElement("option")
-        opt.value = v.id || v.nome
-        opt.textContent = v.nome
+        opt.value = v.id || v.tipo
+        opt.textContent = v.tipo + (v.espessura ? ` - ${v.espessura}mm` : "")
         vidroSelect.appendChild(opt)
     })
 }
@@ -164,16 +162,8 @@ function renderCampos(){
         switch(c){
             case "largura": label.innerHTML=`Largura (mm)<input type="number" id="largura" value="800" oninput="desenharPorta()">`; break
             case "altura": label.innerHTML=`Altura (mm)<input type="number" id="altura" value="2000" oninput="desenharPorta()">`; break
-            case "perfil": 
-                label.innerHTML=`Perfil<select id="perfil"><option>Padrão</option></select>`; 
-                container.appendChild(label)
-                atualizarPerfisSelect()
-                return
-            case "vidro": 
-                label.innerHTML=`Vidro<select id="vidro"><option>Padrão</option></select>`; 
-                container.appendChild(label)
-                atualizarVidrosSelect()
-                return
+            case "perfil": label.innerHTML=`Perfil<select id="perfil"><option>Padrão</option></select>`; break
+            case "vidro": label.innerHTML=`Vidro<select id="vidro"><option>Padrão</option></select>`; break
             case "trilho": label.innerHTML=`Trilho<select id="trilho"><option>Padrão</option></select>`; break
             case "qtd_folhas": label.innerHTML=`Qtd Folhas<input type="number" id="qtd_folhas" value="2" oninput="desenharPorta()">`; break
             case "dobradica": label.innerHTML=`Dobradiça<select id="dobradica"><option>Padrão</option></select>`; break
@@ -182,6 +172,8 @@ function renderCampos(){
         container.appendChild(label)
     })
     desenharPorta()
+    atualizarPerfisSelect()
+    atualizarVidrosSelect()
 }
 
 // =====================
@@ -250,7 +242,7 @@ function renderPortas(){
         div.innerHTML=`<strong>${p.tipo}</strong><br>`+
             Object.entries(p.dados).map(([k,v])=>`${k}: ${v}`).join("<br>")+ "<br>" +
             (p.dados.perfil ? `Perfil: ${todosPerfis.find(f=>f.id===p.dados.perfil)?.nome || "N/A"}<br>` : "") +
-            (p.dados.vidro ? `Vidro: ${todosVidros.find(v=>v.id===p.dados.vidro)?.nome || "N/A"}<br>` : "") +
+            (p.dados.vidro ? `Vidro: ${todosVidros.find(f=>f.id===p.dados.vidro)?.tipo || "N/A"}<br>` : "") +
             p.svg
 
         const btn=document.createElement("button")
