@@ -10,7 +10,6 @@ def calcular_preco(custo, margem, perda):
     return custo_com_perda * (1 + margem / 100)
 
 # ===================== LOGIN DECORATOR =====================
-# Importa do app.py para reutilizar o login_required
 from app import login_required
 
 # ===================== ROTAS PERFIS =====================
@@ -34,7 +33,8 @@ def criar_perfil():
         "margem": data["margem"],
         "perda": data["perda"],
         "preco": round(preco, 2),
-        "tipologias": data.get("tipologias", [])
+        "tipologias": data.get("tipologias", []),
+        "insumos": data.get("insumos", [])  # <-- adicionado
     }
     r = requests.post(f"{SUPABASE_URL}/rest/v1/perfis", headers=HEADERS, json=payload)
     r.raise_for_status()
@@ -52,7 +52,8 @@ def editar_perfil(id):
         "margem": data["margem"],
         "perda": data["perda"],
         "preco": round(preco, 2),
-        "tipologias": data.get("tipologias", [])
+        "tipologias": data.get("tipologias", []),
+        "insumos": data.get("insumos", [])  # <-- adicionado
     }
     r = requests.patch(f"{SUPABASE_URL}/rest/v1/perfis?id=eq.{id}", headers=HEADERS, json=payload)
     r.raise_for_status()
@@ -65,4 +66,5 @@ def deletar_perfil(id):
     r = requests.delete(f"{SUPABASE_URL}/rest/v1/perfis?id=eq.{id}", headers=HEADERS)
     r.raise_for_status()
     return jsonify({"status": "deleted"})
+
 
