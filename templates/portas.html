@@ -35,7 +35,6 @@ input, select { padding:7px; margin-top:5px; }
         <h1>Portas do Orçamento</h1>
         <p id="infoOrcamento"></p>
 
-        <!-- FORM PORTA -->
         <div id="formPorta">
             <label>
                 Tipologia
@@ -64,23 +63,19 @@ input, select { padding:7px; margin-top:5px; }
 function go(p){ window.location.href = p }
 
 // =====================
-// UUID DO ORÇAMENTO (SESSION)
+// UUID DO ORÇAMENTO (URL)
 // =====================
-let ORCAMENTO_UUID = null
+const params = new URLSearchParams(window.location.search)
+const ORCAMENTO_UUID = params.get("orcamento_uuid")
 
-fetch("/api/orcamento/atual")
-  .then(r => r.json())
-  .then(data => {
-      if (!data.uuid) {
-          document.getElementById("infoOrcamento").innerHTML =
-              "<strong style='color:red'>Nenhum orçamento ativo</strong>"
-          return
-      }
+if(!ORCAMENTO_UUID){
+    document.getElementById("infoOrcamento").innerHTML =
+        "<strong style='color:red'>UUID do orçamento não encontrado</strong>"
+    throw new Error("orcamento_uuid ausente")
+}
 
-      ORCAMENTO_UUID = data.uuid
-      document.getElementById("infoOrcamento").innerHTML =
-          `Orçamento: <strong>${ORCAMENTO_UUID}</strong>`
-  })
+document.getElementById("infoOrcamento").innerHTML =
+    `Editando orçamento: <strong>${ORCAMENTO_UUID}</strong>`
 
 // =====================
 // TIPOLOGIAS
@@ -124,16 +119,16 @@ function desenharPorta(){
     const svg = document.getElementById("portaSVG")
     if(!largura || !altura) return
 
-    svg.innerHTML = ""
-    const padding = 10
-    const scale = Math.min(
+    svg.innerHTML=""
+    const padding=10
+    const scale=Math.min(
         (svg.clientWidth-2*padding)/largura,
         (svg.clientHeight-2*padding)/altura
     )
 
-    const rect = document.createElementNS("http://www.w3.org/2000/svg","rect")
-    rect.setAttribute("x",(svg.clientWidth - largura*scale)/2)
-    rect.setAttribute("y",(svg.clientHeight - altura*scale)/2)
+    const rect=document.createElementNS("http://www.w3.org/2000/svg","rect")
+    rect.setAttribute("x",(svg.clientWidth-largura*scale)/2)
+    rect.setAttribute("y",(svg.clientHeight-altura*scale)/2)
     rect.setAttribute("width",largura*scale)
     rect.setAttribute("height",altura*scale)
     rect.setAttribute("fill","#ccc")
@@ -146,31 +141,26 @@ function desenharPorta(){
 // =====================
 // PORTAS (LOCAL)
 // =====================
-let portas = []
-let editando = null
-let idCounter = 0
+let portas=[]
+let editando=null
+let idCounter=0
 
 function salvarPorta(){
-    if(!ORCAMENTO_UUID){
-        alert("Nenhum orçamento ativo")
-        return
-    }
-
-    const tipo = document.getElementById("tipologia").value
+    const tipo=document.getElementById("tipologia").value
     if(!tipo){ alert("Selecione a tipologia"); return }
 
-    const dados = {}
+    const dados={}
     TIPOLOGIAS[tipo].forEach(c=>{
-        const el = document.getElementById(c)
-        if(el) dados[c] = el.value
+        const el=document.getElementById(c)
+        if(el) dados[c]=el.value
     })
 
-    const svg = document.getElementById("portaSVG").outerHTML
+    const svg=document.getElementById("portaSVG").outerHTML
 
-    if(editando !== null){
-        const p = portas.find(p=>p.id===editando)
+    if(editando!==null){
+        const p=portas.find(p=>p.id===editando)
         Object.assign(p,{tipo,dados,svg})
-        editando = null
+        editando=null
     } else {
         portas.push({id:idCounter++,tipo,dados,svg})
     }
@@ -179,15 +169,15 @@ function salvarPorta(){
 }
 
 function renderPortas(){
-    const container = document.getElementById("portasSalvas")
-    container.innerHTML = ""
+    const container=document.getElementById("portasSalvas")
+    container.innerHTML=""
     portas.forEach(p=>{
-        const div = document.createElement("div")
-        div.innerHTML = `<strong>${p.tipo}</strong><br>` +
-            Object.entries(p.dados).map(([k,v])=>`${k}: ${v}`).join("<br>") +
+        const div=document.createElement("div")
+        div.innerHTML=`<strong>${p.tipo}</strong><br>`+
+            Object.entries(p.dados).map(([k,v])=>`${k}: ${v}`).join("<br>")+
             "<br>"+p.svg
 
-        const btn = document.createElement("button")
+        const btn=document.createElement("button")
         btn.className="btn"
         btn.textContent="Editar"
         btn.onclick=()=>editarPorta(p.id)
@@ -198,13 +188,13 @@ function renderPortas(){
 }
 
 function editarPorta(id){
-    const p = portas.find(p=>p.id===id)
-    editando = id
-    document.getElementById("tipologia").value = p.tipo
+    const p=portas.find(p=>p.id===id)
+    editando=id
+    document.getElementById("tipologia").value=p.tipo
     renderCampos()
     Object.keys(p.dados).forEach(k=>{
-        const el = document.getElementById(k)
-        if(el) el.value = p.dados[k]
+        const el=document.getElementById(k)
+        if(el) el.value=p.dados[k]
     })
     desenharPorta()
 }
@@ -212,4 +202,5 @@ function editarPorta(id){
 
 </body>
 </html>
+
 
