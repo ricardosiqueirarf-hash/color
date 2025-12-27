@@ -93,10 +93,10 @@ def insumos_page():
 def orcamentos_page():
     return render_template("orcamentos.html")
 
-@app.route("/portas-page/<uuid_orcamento>")
+@app.route("/portas-page")
 @login_required
-def portas_page(uuid_orcamento):
-    return render_template("portas.html", uuid_orcamento=uuid_orcamento)
+def portas_page():
+    return render_template("portas.html")
     
 # =====================
 # LOGIN
