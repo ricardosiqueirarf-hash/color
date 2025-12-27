@@ -97,6 +97,11 @@ def orcamentos_page():
 @login_required
 def portas_page():
     return render_template("portas.html")
+
+@app.route("/catalogo-page")
+@login_required
+def catalogo_page():
+    return render_template("catalogo.html")
     
 # =====================
 # LOGIN
