@@ -31,22 +31,22 @@ th { background:#ddd; }
         <button onclick="go('/perfis-page')">Perfis</button>
         <button onclick="go('/vidros-page')">Vidros</button>
         <button onclick="go('/producao-page')">producao</button>
-        <button onclick="go('/insumos-page')">insumos</button
+        <button onclick="go('/insumos-page')">insumos</button>
         <button onclick="go('/orcamentos-page')">orcamentos</button>        
     </div>
 
     <div class="content">
         <h1>Orçamento de Portas</h1>
 
-        <!-- ORÇAMENTOS EXISTENTES -->
-        <h2>Orçamentos Existentes</h2>
-        <div id="orcamentosExistentes"><em>Carregando...</em></div>
-
         <!-- FORMULÁRIO FICHA DO CLIENTE -->
         <div id="formCliente">
             <label>Nome do Cliente<input type="text" id="clienteNome"></label>
             <button class="btn" onclick="criarFichaCliente()">Criar Ficha</button>
         </div>
+
+        <!-- ORÇAMENTOS EXISTENTES (AGORA AQUI) -->
+        <h2>Orçamentos Existentes</h2>
+        <div id="orcamentosExistentes"><em>Carregando...</em></div>
 
         <!-- FORMULÁRIO PORTA -->
         <div id="formPorta" style="display:none;">
@@ -96,14 +96,27 @@ function carregarOrcamentos() {
 
         const table = document.createElement("table");
         const thead = document.createElement("thead");
-        thead.innerHTML = `<tr><th># Pedido</th><th>Cliente</th><th>Data Criação</th></tr>`;
+        thead.innerHTML = `
+            <tr>
+                <th># Pedido</th>
+                <th>Cliente</th>
+                <th>Data Criação</th>
+                <th>Ações</th>
+            </tr>`;
         table.appendChild(thead);
 
         const tbody = document.createElement("tbody");
         orcamentos.forEach(o => {
             const tr = document.createElement("tr");
             const dataCriacao = o.data_criacao ? new Date(o.data_criacao).toLocaleString() : "";
-            tr.innerHTML = `<td>${o.numero_pedido}</td><td>${o.cliente_nome}</td><td>${dataCriacao}</td>`;
+            tr.innerHTML = `
+                <td>${o.numero_pedido}</td>
+                <td>${o.cliente_nome}</td>
+                <td>${dataCriacao}</td>
+                <td>
+                    <button class="btn" onclick="editarOrcamento('${o.id}')">Editar</button>
+                </td>
+            `;
             tbody.appendChild(tr);
         });
         table.appendChild(tbody);
@@ -115,6 +128,10 @@ function carregarOrcamentos() {
     });
 }
 carregarOrcamentos();
+
+function editarOrcamento(uuid){
+    window.location.href = `portas.html?orcamento_uuid=${uuid}`;
+}
 
 // =====================
 // FICHA CLIENTE
