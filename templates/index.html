@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Orçamento de Portas</title>
+
 <style>
 body { margin:0; font-family:Arial, Helvetica, sans-serif; background:#f2f2f2; }
 .app { display:grid; grid-template-columns:18% 82%; height:100vh; }
@@ -14,14 +15,13 @@ body { margin:0; font-family:Arial, Helvetica, sans-serif; background:#f2f2f2; }
 label { display:flex; flex-direction:column; font-size:0.9rem; width:180px; }
 input, select { padding:7px; margin-top:5px; }
 .btn { padding:10px 16px; border:none; border-radius:6px; cursor:pointer; background:#0078d7; color:white; margin-top:10px; }
-.btn-danger { background:#c0392b; }
 #formPorta, #formCliente { background:white; padding:15px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 8px rgba(0,0,0,.1); }
-#portasSalvas div { margin-bottom:10px; border:1px solid #333; padding:10px; background:#f0f0f0; }
 table { border-collapse: collapse; width:100%; }
-th, td { border:1px solid #ccc; padding:5px; text-align:left; }
+th, td { border:1px solid #ccc; padding:6px; }
 th { background:#ddd; }
 </style>
 </head>
+
 <body>
 
 <div class="app">
@@ -30,48 +30,26 @@ th { background:#ddd; }
         <button onclick="go('/')">Home</button>
         <button onclick="go('/perfis-page')">Perfis</button>
         <button onclick="go('/vidros-page')">Vidros</button>
-        <button onclick="go('/producao-page')">producao</button>
-        <button onclick="go('/insumos-page')">insumos</button>
-        <button onclick="go('/orcamentos-page')">orcamentos</button>        
+        <button onclick="go('/producao-page')">Produção</button>
+        <button onclick="go('/insumos-page')">Insumos</button>
+        <button onclick="go('/orcamentos-page')">Orçamentos</button>
     </div>
 
     <div class="content">
-        <h1>Orçamento de Portas</h1>
+        <h1>Orçamentos</h1>
 
-        <!-- FORMULÁRIO FICHA DO CLIENTE -->
+        <!-- CRIAR CLIENTE -->
         <div id="formCliente">
-            <label>Nome do Cliente<input type="text" id="clienteNome"></label>
-            <button class="btn" onclick="criarFichaCliente()">Criar Ficha</button>
+            <label>
+                Nome do Cliente
+                <input type="text" id="clienteNome">
+            </label>
+            <button class="btn" onclick="criarFichaCliente()">Criar Orçamento</button>
         </div>
 
-        <!-- ORÇAMENTOS EXISTENTES (AGORA AQUI) -->
+        <!-- ORÇAMENTOS EXISTENTES -->
         <h2>Orçamentos Existentes</h2>
         <div id="orcamentosExistentes"><em>Carregando...</em></div>
-
-        <!-- FORMULÁRIO PORTA -->
-        <div id="formPorta" style="display:none;">
-            <label>
-                Tipologia
-                <select id="tipologia" onchange="renderCampos()">
-                    <option value="">Selecione</option>
-                    <option value="giro">Porta de Giro</option>
-                    <option value="deslizante">Porta Deslizante</option>
-                    <option value="correr">Porta de Correr</option>
-                    <option value="pivotante">Porta Pivotante</option>
-                </select>
-            </label>
-
-            <div class="row" id="campos"></div>
-
-            <button class="btn" onclick="salvarPorta()">Salvar Porta</button>
-
-            <svg id="portaSVG" width="200" height="400" style="border:1px solid #000; margin-top:10px;"></svg>
-        </div>
-
-        <h2>Portas Salvas</h2>
-        <div id="portasSalvas"></div>
-
-        <button class="btn" onclick="salvarOrcamento()" style="margin-top:20px;">Salvar Orçamento Final</button>
     </div>
 </div>
 
@@ -79,216 +57,92 @@ th { background:#ddd; }
 function go(p){ window.location.href = p }
 
 // =====================
-// CARREGAR ORÇAMENTOS EXISTENTES
+// LISTAR ORÇAMENTOS
 // =====================
-function carregarOrcamentos() {
-    fetch('/api/orcamentos')
-    .then(res => res.json())
-    .then(data => {
-        const container = document.getElementById("orcamentosExistentes");
-        container.innerHTML = "";
+function carregarOrcamentos(){
+    fetch("/api/orcamentos")
+    .then(r=>r.json())
+    .then(d=>{
+        const container = document.getElementById("orcamentosExistentes")
+        container.innerHTML = ""
 
-        const orcamentos = data.orcamentos || [];
-        if(orcamentos.length === 0){
-            container.innerHTML = "<em>Nenhum orçamento encontrado.</em>";
-            return;
+        if(!d.orcamentos || d.orcamentos.length === 0){
+            container.innerHTML = "<em>Nenhum orçamento encontrado</em>"
+            return
         }
 
-        const table = document.createElement("table");
-        const thead = document.createElement("thead");
-        thead.innerHTML = `
-            <tr>
-                <th># Pedido</th>
-                <th>Cliente</th>
-                <th>Data Criação</th>
-                <th>Ações</th>
-            </tr>`;
-        table.appendChild(thead);
+        const table = document.createElement("table")
+        table.innerHTML = `
+            <thead>
+                <tr>
+                    <th># Pedido</th>
+                    <th>Cliente</th>
+                    <th>Data</th>
+                    <th>Ações</th>
+                </tr>
+            </thead>
+            <tbody></tbody>
+        `
+        const tbody = table.querySelector("tbody")
 
-        const tbody = document.createElement("tbody");
-        orcamentos.forEach(o => {
-            const tr = document.createElement("tr");
-            const dataCriacao = o.data_criacao ? new Date(o.data_criacao).toLocaleString() : "";
+        d.orcamentos.forEach(o=>{
+            const tr = document.createElement("tr")
             tr.innerHTML = `
                 <td>${o.numero_pedido}</td>
                 <td>${o.cliente_nome}</td>
-                <td>${dataCriacao}</td>
+                <td>${new Date(o.data_criacao).toLocaleString()}</td>
                 <td>
-                    <button class="btn" onclick="editarOrcamento('${o.id}')">Editar</button>
+                    <button class="btn" onclick="editarOrcamento('${o.id}')">
+                        Editar
+                    </button>
                 </td>
-            `;
-            tbody.appendChild(tr);
-        });
-        table.appendChild(tbody);
-        container.appendChild(table);
-    })
-    .catch(err=>{
-        console.error("Erro ao carregar orçamentos:", err);
-        document.getElementById("orcamentosExistentes").innerHTML = "<em>Erro ao carregar orçamentos.</em>";
-    });
-}
-carregarOrcamentos();
+            `
+            tbody.appendChild(tr)
+        })
 
+        container.appendChild(table)
+    })
+}
+carregarOrcamentos()
+
+// =====================
+// EDITAR ORÇAMENTO (SESSION)
+// =====================
 function editarOrcamento(uuid){
-    window.location.href = `portas.html?orcamento_uuid=${uuid}`;
+    fetch("/api/orcamento/set", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ uuid })
+    }).then(()=>{
+        window.location.href = "/portas-page"
+    })
 }
 
 // =====================
-// FICHA CLIENTE
+// CRIAR ORÇAMENTO
 // =====================
-let cliente = {nome:"", id:null};
-let portasSalvas = [];
-let idCounter = 0;
-
 async function criarFichaCliente(){
-    const nome = document.getElementById("clienteNome").value.trim();
-    if(!nome){ alert("Digite o nome do cliente"); return }
-    cliente.nome = nome;
-
-    try {
-        const res = await fetch('/api/orcamento', {
-            method:'POST',
-            headers:{'Content-Type':'application/json'},
-            body:JSON.stringify({cliente_nome: cliente.nome})
-        });
-        const data = await res.json();
-
-        if(data.success){
-            cliente.id = data.id;
-            alert("Ficha criada com sucesso! ID: "+data.id);
-            document.getElementById("formCliente").style.display="none";
-            document.getElementById("formPorta").style.display="block";
-            carregarOrcamentos();
-        } else {
-            alert("Erro ao criar ficha: "+data.error);
-        }
-    } catch(err) {
-        console.error("Erro no fetch criarFichaCliente:", err);
-        alert("Erro ao criar ficha, veja o console.");
+    const nome = document.getElementById("clienteNome").value.trim()
+    if(!nome){
+        alert("Digite o nome do cliente")
+        return
     }
-}
 
-// =====================
-// TIPOS DE PORTA
-// =====================
-const TIPOLOGIAS = {
-    giro: ["largura","altura","perfil","vidro","dobradica"],
-    deslizante: ["largura","altura","perfil","vidro","trilho","qtd_folhas"],
-    correr: ["largura","altura","perfil","vidro","trilho","qtd_folhas"],
-    pivotante: ["largura","altura","perfil","vidro","pivo"]
-};
-
-function renderCampos(){
-    const tipo = document.getElementById("tipologia").value;
-    const container = document.getElementById("campos");
-    container.innerHTML = "";
-    if(!TIPOLOGIAS[tipo]) return;
-
-    TIPOLOGIAS[tipo].forEach(c=>{
-        const label = document.createElement("label");
-        switch(c){
-            case "largura": label.innerHTML=`Largura (mm)<input type="number" id="largura" value="800" oninput="desenharPorta()">`; break;
-            case "altura": label.innerHTML=`Altura (mm)<input type="number" id="altura" value="2000" oninput="desenharPorta()">`; break;
-            case "perfil": label.innerHTML=`Perfil<select id="perfil"><option>Padrão</option></select>`; break;
-            case "vidro": label.innerHTML=`Vidro<select id="vidro"><option>Padrão</option></select>`; break;
-            case "trilho": label.innerHTML=`Trilho<select id="trilho"><option>Padrão</option></select>`; break;
-            case "qtd_folhas": label.innerHTML=`Qtd Folhas<input type="number" id="qtd_folhas" value="2" oninput="desenharPorta()">`; break;
-            case "dobradica": label.innerHTML=`Dobradiça<select id="dobradica"><option>Padrão</option></select>`; break;
-            case "pivo": label.innerHTML=`Pivô<select id="pivo"><option>Superior</option></select>`; break;
-        }
-        container.appendChild(label);
-    });
-    desenharPorta();
-}
-
-// =====================
-// DESENHAR PORTA
-// =====================
-function desenharPorta(){
-    const larguraInput = document.getElementById("largura")
-    const alturaInput = document.getElementById("altura")
-    const svg = document.getElementById("portaSVG")
-    if(!larguraInput||!alturaInput||!svg) return
-
-    const largura = parseFloat(larguraInput.value)
-    const altura = parseFloat(alturaInput.value)
-    svg.innerHTML=''
-    const maxSVGWidth=svg.clientWidth
-    const maxSVGHeight=svg.clientHeight
-    const padding=10
-    const scale=Math.min((maxSVGWidth-2*padding)/largura,(maxSVGHeight-2*padding)/altura)
-    const rectWidth=largura*scale
-    const rectHeight=altura*scale
-    const rect=document.createElementNS("http://www.w3.org/2000/svg","rect")
-    rect.setAttribute("x",(maxSVGWidth-rectWidth)/2)
-    rect.setAttribute("y",(maxSVGHeight-rectHeight)/2)
-    rect.setAttribute("width",rectWidth)
-    rect.setAttribute("height",rectHeight)
-    rect.setAttribute("fill","#ccc")
-    rect.setAttribute("stroke","#000")
-    rect.setAttribute("stroke-width","6")
-    rect.setAttribute("vector-effect","non-scaling-stroke")
-    svg.appendChild(rect)
-}
-
-// =====================
-// SALVAR PORTAS (LOCAL)
-// =====================
-let portaEditandoId=null
-
-function salvarPorta(){
-    const tipologia=document.getElementById("tipologia").value
-    if(!tipologia){ alert("Selecione tipologia"); return }
-
-    const dados={}
-    TIPOLOGIAS[tipologia].forEach(c=>{
-        const el=document.getElementById(c)
-        if(el) dados[c]=el.value
+    const res = await fetch("/api/orcamento", {
+        method:"POST",
+        headers:{ "Content-Type":"application/json" },
+        body: JSON.stringify({ cliente_nome: nome })
     })
-    const svg=document.getElementById("portaSVG").outerHTML
 
-    if(portaEditandoId!==null){
-        const porta=portasSalvas.find(p=>p.id===portaEditandoId)
-        if(porta){ porta.tipologia=tipologia; porta.dados=dados; porta.svg=svg }
-        portaEditandoId=null
+    const data = await res.json()
+    if(data.success){
+        editarOrcamento(data.id)
     } else {
-        const id=idCounter++
-        portasSalvas.push({id,tipologia,dados,svg})
+        alert("Erro ao criar orçamento")
     }
-    renderPortasSalvas()
-}
-
-function renderPortasSalvas(){
-    const container=document.getElementById("portasSalvas")
-    container.innerHTML=""
-    portasSalvas.forEach(p=>{
-        const div=document.createElement("div")
-        let info=`<strong>Porta ${p.id} - ${p.tipologia}</strong><br>`
-        for(let k in p.dados) info+=`${k}: ${p.dados[k]}<br>`
-        div.innerHTML=info+p.svg
-        const btnEditar=document.createElement("button")
-        btnEditar.textContent="Editar"
-        btnEditar.className="btn"
-        btnEditar.style.marginTop="5px"
-        btnEditar.onclick=()=>editarPorta(p.id)
-        div.appendChild(btnEditar)
-        container.appendChild(div)
-    })
-}
-
-function editarPorta(id){
-    const porta=portasSalvas.find(p=>p.id===id)
-    if(!porta) return
-    portaEditandoId=id
-    document.getElementById("tipologia").value=porta.tipologia
-    renderCampos()
-    TIPOLOGIAS[porta.tipologia].forEach(c=>{
-        const el=document.getElementById(c)
-        if(el) el.value=porta.dados[c]
-    })
-    desenharPorta()
 }
 </script>
 
 </body>
 </html>
+
