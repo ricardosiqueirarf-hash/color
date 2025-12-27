@@ -5,11 +5,7 @@
     <title>Login</title>
 
     <style>
-        * {
-            box-sizing: border-box;
-            font-family: Arial, Helvetica, sans-serif;
-        }
-
+        * { box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; }
         body {
             margin: 0;
             height: 100vh;
@@ -19,7 +15,6 @@
             justify-content: center;
             align-items: center;
         }
-
         body::before {
             content: "";
             position: fixed;
@@ -27,7 +22,6 @@
             background: rgba(0,0,0,0.55);
             backdrop-filter: blur(4px);
         }
-
         .login-container {
             position: relative;
             background: #fff;
@@ -36,27 +30,9 @@
             border-radius: 10px;
             box-shadow: 0 15px 40px rgba(0,0,0,0.35);
         }
-
-        .logo {
-            text-align: center;
-            font-size: 34px;
-            margin-bottom: 30px;
-            font-weight: 300;
-            color: #666;
-        }
-
-        .logo span {
-            color: #2a9ecb;
-            font-weight: 500;
-        }
-
-        label {
-            display: block;
-            font-size: 14px;
-            color: #333;
-            margin-bottom: 6px;
-        }
-
+        .logo { text-align: center; font-size: 34px; margin-bottom: 30px; font-weight: 300; color: #666; }
+        .logo span { color: #2a9ecb; font-weight: 500; }
+        label { display: block; font-size: 14px; color: #333; margin-bottom: 6px; }
         input {
             width: 100%;
             padding: 11px 12px;
@@ -65,34 +41,10 @@
             border-radius: 6px;
             font-size: 14px;
         }
-
-        input:focus {
-            outline: none;
-            border-color: #2a9ecb;
-        }
-
-        .error {
-            background: #f44336;
-            color: #fff;
-            padding: 10px;
-            margin-bottom: 18px;
-            border-radius: 6px;
-            font-size: 14px;
-            text-align: center;
-        }
-
-        .actions {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: 10px;
-        }
-
-        .actions-left {
-            display: flex;
-            gap: 10px;
-        }
-
+        input:focus { outline: none; border-color: #2a9ecb; }
+        .error { background: #f44336; color: #fff; padding: 10px; margin-bottom: 18px; border-radius: 6px; font-size: 14px; text-align: center; }
+        .actions { display: flex; justify-content: space-between; align-items: center; margin-top: 10px; }
+        .actions-left { display: flex; gap: 10px; }
         .btn-outline {
             padding: 8px 16px;
             border-radius: 20px;
@@ -102,12 +54,7 @@
             font-size: 13px;
             cursor: pointer;
         }
-
-        .btn-outline:hover {
-            border-color: #2a9ecb;
-            color: #2a9ecb;
-        }
-
+        .btn-outline:hover { border-color: #2a9ecb; color: #2a9ecb; }
         .btn-primary {
             padding: 9px 26px;
             border-radius: 20px;
@@ -117,53 +64,64 @@
             cursor: pointer;
             color: #555;
         }
-
-        .btn-primary:hover {
-            border-color: #2a9ecb;
-            color: #2a9ecb;
-        }
-
-        .footer {
-            margin-top: 25px;
-            text-align: right;
-            font-size: 13px;
-            color: #666;
-        }
-
-        .footer span {
-            color: #2a9ecb;
-            font-weight: 600;
-        }
+        .btn-primary:hover { border-color: #2a9ecb; color: #2a9ecb; }
+        .footer { margin-top: 25px; text-align: right; font-size: 13px; color: #666; }
+        .footer span { color: #2a9ecb; font-weight: 600; }
     </style>
+
+    <script>
+        // URL base do backend no Render
+        const BACKEND_URL = "https://colorglass.onrender.com";
+
+        // Função para enviar login via fetch
+        async function enviarLogin(event){
+            event.preventDefault();
+            const username = document.querySelector('input[name="username"]').value.trim();
+            const password = document.querySelector('input[name="password"]').value.trim();
+            if(!username || !password) return alert("Preencha login e senha");
+
+            try {
+                const res = await fetch(`${BACKEND_URL}/login`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ username, password })
+                });
+                const data = await res.json();
+
+                if(data.success){
+                    // Redireciona após login bem-sucedido
+                    window.location.href = `${BACKEND_URL}/`;
+                } else {
+                    mostrarErro(data.error || "Usuário ou senha inválidos");
+                }
+            } catch(err){
+                console.error(err);
+                mostrarErro("Erro ao conectar com o servidor.");
+            }
+        }
+
+        function mostrarErro(msg){
+            let div = document.querySelector(".error");
+            if(!div){
+                div = document.createElement("div");
+                div.className = "error";
+                document.querySelector(".login-container").prepend(div);
+            }
+            div.textContent = msg;
+        }
+    </script>
 </head>
 <body>
 
 <div class="login-container">
-    <div class="logo">
-        Color<span>Glass</span>
-    </div>
+    <div class="logo">Color<span>Glass</span></div>
 
-    {% if error %}
-        <div class="error">{{ error }}</div>
-    {% endif %}
-
-    <form method="POST" action="/login">
+    <form id="loginForm">
         <label>Login</label>
-        <input
-            type="text"
-            name="username"
-            placeholder="digite seu e-mail"
-            required
-            autofocus
-        >
+        <input type="text" name="username" placeholder="digite seu e-mail" required autofocus>
 
         <label>Senha</label>
-        <input
-            type="password"
-            name="password"
-            placeholder="digite sua senha"
-            required
-        >
+        <input type="password" name="password" placeholder="digite sua senha" required>
 
         <div class="actions">
             <div class="actions-left">
@@ -180,5 +138,11 @@
     </div>
 </div>
 
+<script>
+    // Conecta o form com a função enviarLogin
+    document.getElementById("loginForm").addEventListener("submit", enviarLogin);
+</script>
+
 </body>
 </html>
+
