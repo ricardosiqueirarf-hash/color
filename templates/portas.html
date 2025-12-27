@@ -64,15 +64,23 @@ input, select { padding:7px; margin-top:5px; }
 function go(p){ window.location.href = p }
 
 // =====================
-// UUID DO ORÇAMENTO
+// UUID DO ORÇAMENTO (SESSION)
 // =====================
-const params = new URLSearchParams(window.location.search)
-const ORCAMENTO_UUID = params.get("orcamento_uuid")
+let ORCAMENTO_UUID = null
 
-document.getElementById("infoOrcamento").innerHTML =
-    ORCAMENTO_UUID
-    ? `Orçamento: <strong>${ORCAMENTO_UUID}</strong>`
-    : "<em>Orçamento não informado</em>"
+fetch("/api/orcamento/atual")
+  .then(r => r.json())
+  .then(data => {
+      if (!data.uuid) {
+          document.getElementById("infoOrcamento").innerHTML =
+              "<strong style='color:red'>Nenhum orçamento ativo</strong>"
+          return
+      }
+
+      ORCAMENTO_UUID = data.uuid
+      document.getElementById("infoOrcamento").innerHTML =
+          `Orçamento: <strong>${ORCAMENTO_UUID}</strong>`
+  })
 
 // =====================
 // TIPOLOGIAS
@@ -143,6 +151,11 @@ let editando = null
 let idCounter = 0
 
 function salvarPorta(){
+    if(!ORCAMENTO_UUID){
+        alert("Nenhum orçamento ativo")
+        return
+    }
+
     const tipo = document.getElementById("tipologia").value
     if(!tipo){ alert("Selecione a tipologia"); return }
 
@@ -161,6 +174,7 @@ function salvarPorta(){
     } else {
         portas.push({id:idCounter++,tipo,dados,svg})
     }
+
     renderPortas()
 }
 
@@ -198,3 +212,4 @@ function editarPorta(id){
 
 </body>
 </html>
+
