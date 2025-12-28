@@ -14,7 +14,6 @@ from app import login_required
 
 # ===================== ROTAS PERFIS =====================
 @perfis_bp.route("/api/perfis", methods=["GET"])
-@login_required
 def listar_perfis():
     from app import SUPABASE_URL, HEADERS
     r = requests.get(f"{SUPABASE_URL}/rest/v1/perfis?select=*&order=nome.asc", headers=HEADERS)
@@ -22,7 +21,6 @@ def listar_perfis():
     return jsonify(r.json())
 
 @perfis_bp.route("/api/perfis", methods=["POST"])
-@login_required
 def criar_perfil():
     from app import SUPABASE_URL, HEADERS
     data = request.json
@@ -41,7 +39,6 @@ def criar_perfil():
     return jsonify({"status": "ok"})
 
 @perfis_bp.route("/api/perfis/<id>", methods=["PUT"])
-@login_required
 def editar_perfil(id):
     from app import SUPABASE_URL, HEADERS
     data = request.json
@@ -60,7 +57,6 @@ def editar_perfil(id):
     return jsonify({"status": "updated"})
 
 @perfis_bp.route("/api/perfis/<id>", methods=["DELETE"])
-@login_required
 def deletar_perfil(id):
     from app import SUPABASE_URL, HEADERS
     r = requests.delete(f"{SUPABASE_URL}/rest/v1/perfis?id=eq.{id}", headers=HEADERS)
