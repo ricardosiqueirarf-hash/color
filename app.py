@@ -53,60 +53,6 @@ def add_header(response):
     response.headers["Expires"] = "0"
     response.headers["Surrogate-Control"] = "no-store"
     return response
-
-# =====================
-# PÁGINAS
-# =====================
-
-@app.route("/")
-@login_required
-def index():
-    return render_template("index.html")
-
-@app.route("/perfis")
-@login_required
-def perfis_page():
-    return render_template("perfis.html")
-
-@app.route("/vidros")
-@login_required
-def vidros_page():
-    return render_template("vidros.html")
-
-@app.route("/admin")
-@login_required
-def admin_page():
-    return render_template("admin.html")
-
-@app.route("/producao")
-@login_required
-def producao_page():
-    return render_template("producao.html")
-
-@app.route("/insumos")
-@login_required
-def insumos_page():
-    return render_template("insumos.html")
-
-@app.route("/orcamentos")
-@login_required
-def orcamentos_page():
-    return render_template("orcamentos.html")
-
-@app.route("/portas")
-@login_required
-def portas_page():
-    return render_template("portas.html")
-
-@app.route("/catalogo")
-@login_required
-def catalogo_page():
-    return render_template("catalogo.html")
-
-@app.route("/ajustes")
-@login_required
-def ajustes_page():
-    return render_template("ajustes.html")
     
 # =====================
 # LOGIN
