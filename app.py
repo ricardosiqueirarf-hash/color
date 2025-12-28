@@ -107,6 +107,14 @@ from api_orcamentos import orcamentos_bp
 app.register_blueprint(orcamentos_bp)
 
 # =====================
+# API BOT
+# =====================
+
+from api_portas import portas_bp
+app.register_blueprint(portas_bp)
+
+
+# =====================
 # START
 # =====================
 
