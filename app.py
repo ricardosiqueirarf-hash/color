@@ -17,19 +17,7 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
-app = Flask(__name__, template_folder="templates")
-app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret")
-
-CORS(
-    app,
-    resources={
-        r"/api/*": {
-            "origins": "https://ricardosiqueirarf-hash.github.io"
-        }
-    },
-    supports_credentials=False
-)
-
+CORS(app)
 
 # =====================
 # CÁLCULOS
