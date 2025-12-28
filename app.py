@@ -20,7 +20,9 @@ HEADERS = {
 app = Flask(__name__, template_folder="templates")
 app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret")
 
-CORS(app)
+# Habilita CORS apenas para o domínio do GitHub Pages
+CORS(app, origins=["https://ricardosiqueirarf-hash.github.io"])
+
 
 # =====================
 # CÁLCULOS
