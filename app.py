@@ -17,6 +17,9 @@ HEADERS = {
     "Content-Type": "application/json"
 }
 
+app = Flask(__name__)
+app.secret_key = os.environ.get("FLASK_SECRET_KEY", "dev-secret")
+
 CORS(app)
 
 # =====================
