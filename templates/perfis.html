@@ -72,8 +72,10 @@ th { background:#eee; }
 // =====================
 // PERFIS
 // =====================
+const BASE_URL = "https://colorglass.onrender.com"; // URL do backend no Render
+
 async function carregar() {
-    const res = await fetch("/api/perfis");
+    const res = await fetch(`${BASE_URL}/api/perfis`);
     const data = await res.json();
     const tbody = document.getElementById("tabela");
     tbody.innerHTML = "";
@@ -107,7 +109,7 @@ function getTipologiasSelecionadas() {
 let insumosLista = [];
 
 async function carregarInsumos() {
-    const res = await fetch("/api/materiais");
+    const res = await fetch(`${BASE_URL}/api/materiais`);
     const data = await res.json();
     insumosLista = data.map(m => m.nome);
     atualizarSelects();
@@ -168,7 +170,7 @@ async function salvar() {
     }
 
     const payload = { nome, custo, margem, perda, tipologias, insumos };
-    const url = id ? `/api/perfis/${id}` : "/api/perfis";
+    const url = id ? `${BASE_URL}/api/perfis/${id}` : `${BASE_URL}/api/perfis`;
     const method = id ? "PUT" : "POST";
 
     await fetch(url,{
@@ -209,7 +211,6 @@ function editar(p) {
 
     atualizarSelects();
 
-    // Aqui é que corrigimos: setamos o valor de cada select
     const selects = document.querySelectorAll(".insumo-select");
     selects.forEach((select, idx)=>{
         select.value = insumosDoPerfil[idx] || "";
@@ -218,7 +219,7 @@ function editar(p) {
 
 async function excluir(id){
     if(!confirm("Excluir este perfil?")) return;
-    await fetch(`/api/perfis/${id}`,{method:"DELETE"});
+    await fetch(`${BASE_URL}/api/perfis/${id}`,{method:"DELETE"});
     carregar();
 }
 
@@ -253,4 +254,5 @@ window.addEventListener("DOMContentLoaded", ()=>{
 
 </body>
 </html>
+
 
