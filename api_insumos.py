@@ -13,7 +13,6 @@ def listar_materiais():
     return jsonify(r.json())
 
 @insumos_bp.route("/api/materiais", methods=["POST"])
-@login_required
 def criar_material():
     data = request.json
     preco = float(data.get("preco", 0))  
@@ -30,7 +29,6 @@ def criar_material():
     return jsonify({"status": "ok"})
 
 @insumos_bp.route("/api/materiais/<id>", methods=["PUT"])
-@login_required
 def editar_material(id):
     data = request.json
     preco = float(data.get("preco", 0))
@@ -47,7 +45,6 @@ def editar_material(id):
     return jsonify({"status": "updated"})
 
 @insumos_bp.route("/api/materiais/<id>", methods=["DELETE"])
-@login_required
 def deletar_material(id):
     r = requests.delete(f"{SUPABASE_URL}/rest/v1/materiais?id=eq.{id}", headers=HEADERS)
     r.raise_for_status()
