@@ -14,7 +14,7 @@ def finalizar_portas(orcamento_uuid):
     Recebe um JSON com lista de portas e salva no Supabase vinculando ao orcamento_uuid.
     Converte 'dados' para array de texto (text[]) antes de enviar.
     """
-    from app import SUPABASE_URL, HEADERS  # pega as chaves do app principal
+    from app import SUPABASE_URL, HEADERS
     data = request.json
     portas = data.get("portas")
     if not portas or not isinstance(portas, list):
@@ -24,7 +24,7 @@ def finalizar_portas(orcamento_uuid):
         payload = []
         for p in portas:
             dados_obj = p.get("dados", {})
-            # converte para array de texto: ["chave:valor", ...]
+            # converte dict para array de texto: ["chave:valor", ...]
             dados_array = [f"{k}:{v}" for k, v in dados_obj.items()]
 
             payload.append({
@@ -46,6 +46,8 @@ def finalizar_portas(orcamento_uuid):
 
         return jsonify({"success": True, "portas_salvas": portas_salvas})
 
+    except requests.HTTPError as http_err:
+        return jsonify({"success": False, "error": f"{http_err.response.status_code} {http_err.response.text}"}), http_err.response.status_code
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
 
@@ -53,7 +55,8 @@ def finalizar_portas(orcamento_uuid):
 @portas_bp.route("/api/orcamento/<orcamento_uuid>/portas", methods=["GET"])
 def listar_portas(orcamento_uuid):
     """
-    Lista todas as portas vinculadas a um determinado orçamento
+    Lista todas as portas vinculadas a um determinado orçamento.
+    Converte 'dados' de text[] de volta para dict.
     """
     from app import SUPABASE_URL, HEADERS
     try:
@@ -71,5 +74,8 @@ def listar_portas(orcamento_uuid):
                 p["dados"] = dict(item.split(":", 1) for item in dados_array if ":" in item)
 
         return jsonify({"success": True, "portas": portas})
+    except requests.HTTPError as http_err:
+        return jsonify({"success": False, "error": f"{http_err.response.status_code} {http_err.response.text}"}), http_err.response.status_code
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
