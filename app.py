@@ -15,9 +15,6 @@ SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise RuntimeError("SUPABASE_URL ou SUPABASE_KEY não definidos")
 
-if not ADMIN_PASSWORD or not SECRET_KEY:
-    raise RuntimeError("ADMIN_PASSWORD ou SECRET_KEY não definidos")
-
 HEADERS = {
     "apikey": SUPABASE_KEY,
     "Authorization": f"Bearer {SUPABASE_KEY}",
