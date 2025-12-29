@@ -26,7 +26,7 @@ HEADERS = {
 # =====================
 
 app = Flask(__name__)
-CORS(app)
+CORS(app)  # aceita requisições de qualquer origem, pode restringir se quiser
 
 # =====================
 # HEALTH CHECK
@@ -44,11 +44,13 @@ from api_perfis import perfis_bp
 from api_vidros import vidros_bp
 from api_insumos import insumos_bp
 from api_orcamentos import orcamentos_bp
+from api_portas import portas_bp  # ✅ blueprint de portas
 
 app.register_blueprint(perfis_bp)
 app.register_blueprint(vidros_bp)
 app.register_blueprint(insumos_bp)
 app.register_blueprint(orcamentos_bp)
+app.register_blueprint(portas_bp)  # ✅ registrando blueprint de portas
 
 # =====================
 # START
