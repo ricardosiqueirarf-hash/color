@@ -1,4 +1,3 @@
-# api_portas.py
 from flask import Blueprint, request, jsonify
 import requests
 
@@ -9,11 +8,9 @@ portas_bp = Blueprint("portas_bp", __name__)
 # =====================
 
 @portas_bp.route("/api/orcamento/<orcamento_uuid>/finalizar", methods=["POST"])
-def finalizar_portas(orcamento_uuid):
+def salvar_portas(orcamento_uuid):
     """
-    Recebe um JSON com lista de portas e salva no Supabase vinculando ao orcamento_uuid.
-    Converte 'dados' para array de texto (text[]) antes de enviar.
-    Inclui 'quantidade' no payload.
+    Recebe portas via JSON e salva no Supabase vinculando ao orcamento_uuid.
     """
     from app import SUPABASE_URL, HEADERS
     data = request.json
@@ -25,19 +22,17 @@ def finalizar_portas(orcamento_uuid):
         payload = []
         for p in portas:
             dados_obj = p.get("dados", {})
-            # converte dict para array de texto: ["chave:valor", ...]
             dados_array = [f"{k}:{v}" for k, v in dados_obj.items()]
 
             payload.append({
                 "orcamento_uuid": p.get("orcamento_uuid", orcamento_uuid),
                 "tipo": p.get("tipo"),
                 "dados": dados_array,
-                "quantidade": p.get("quantidade", 1),  # quantidade adicionada
+                "quantidade": p.get("quantidade", 1),
                 "preco": p.get("preco"),
                 "svg": p.get("svg")
             })
 
-        # POST para a tabela 'portas' no Supabase
         r_post = requests.post(
             f"{SUPABASE_URL}/rest/v1/portas",
             headers={**HEADERS, "Content-Type": "application/json", "Prefer": "return=representation"},
@@ -57,9 +52,7 @@ def finalizar_portas(orcamento_uuid):
 @portas_bp.route("/api/orcamento/<orcamento_uuid>/portas", methods=["GET"])
 def listar_portas(orcamento_uuid):
     """
-    Lista todas as portas vinculadas a um determinado orçamento.
-    Converte 'dados' de text[] de volta para dict.
-    Inclui 'quantidade' ao retornar.
+    Lista portas vinculadas a um orçamento.
     """
     from app import SUPABASE_URL, HEADERS
     try:
@@ -70,12 +63,10 @@ def listar_portas(orcamento_uuid):
         r.raise_for_status()
 
         portas = r.json()
-        # converte array de texto de volta para dict
         for p in portas:
             dados_array = p.get("dados", [])
             if isinstance(dados_array, list):
                 p["dados"] = dict(item.split(":", 1) for item in dados_array if ":" in item)
-            # garante que quantidade seja um inteiro
             p["quantidade"] = int(p.get("quantidade", 1))
 
         return jsonify({"success": True, "portas": portas})
@@ -83,5 +74,6 @@ def listar_portas(orcamento_uuid):
         return jsonify({"success": False, "error": f"{http_err.response.status_code} {http_err.response.text}"}), http_err.response.status_code
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
 
 
