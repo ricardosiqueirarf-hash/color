@@ -9,9 +9,6 @@ def calcular_preco(custo, margem, perda):
     custo_com_perda = custo * (1 + perda / 100)
     return custo_com_perda * (1 + margem / 100)
 
-# ===================== LOGIN DECORATOR =====================
-from app import login_required
-
 # ===================== ROTAS PERFIS =====================
 @perfis_bp.route("/api/perfis", methods=["GET"])
 def listar_perfis():
