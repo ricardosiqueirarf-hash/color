@@ -1,5 +1,5 @@
 import os
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 from flask_cors import CORS
 import requests
 
@@ -10,8 +10,14 @@ import requests
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_KEY = os.getenv("SUPABASE_KEY")
 
+ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
+ADMIN_TOKEN = os.getenv("ADMIN_TOKEN")
+
 if not SUPABASE_URL or not SUPABASE_KEY:
     raise RuntimeError("SUPABASE_URL ou SUPABASE_KEY não definidos")
+
+if not ADMIN_PASSWORD or not ADMIN_TOKEN:
+    raise RuntimeError("ADMIN_PASSWORD ou ADMIN_TOKEN não definidos")
 
 HEADERS = {
     "apikey": SUPABASE_KEY,
@@ -35,6 +41,24 @@ def health():
     return jsonify({
         "status": "ok",
         "service": "ColorGlass API"
+    })
+
+# =====================
+# LOGIN (SENHA ÚNICA)
+# =====================
+
+@app.route("/login", methods=["POST"])
+def login():
+    data = request.get_json(silent=True)
+
+    if not data or "password" not in data:
+        return jsonify({"error": "Senha não enviada"}), 400
+
+    if data["password"] != ADMIN_PASSWORD:
+        return jsonify({"error": "Senha incorreta"}), 401
+
+    return jsonify({
+        "token": ADMIN_TOKEN
     })
 
 # =====================
@@ -68,4 +92,3 @@ def no_cache(response):
 
 if __name__ == "__main__":
     app.run(debug=True)
-
