@@ -3,13 +3,10 @@ import requests
 
 insumos_bp = Blueprint("insumos_bp", __name__)
 
-# ===================== LOGIN DECORATOR =====================
-# Importa do app.py para reutilizar o login_required
-from app import login_required, SUPABASE_URL, HEADERS
 
 # ===================== ROTAS INSUMOS =====================
 @insumos_bp.route("/api/materiais", methods=["GET"])
-@login_required
+
 def listar_materiais():
     r = requests.get(f"{SUPABASE_URL}/rest/v1/materiais?select=*&order=nome.asc", headers=HEADERS)
     r.raise_for_status()
