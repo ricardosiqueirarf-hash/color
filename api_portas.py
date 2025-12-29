@@ -13,6 +13,7 @@ def finalizar_portas(orcamento_uuid):
     """
     Recebe um JSON com lista de portas e salva no Supabase vinculando ao orcamento_uuid.
     Converte 'dados' para array de texto (text[]) antes de enviar.
+    Inclui 'quantidade' no payload.
     """
     from app import SUPABASE_URL, HEADERS
     data = request.json
@@ -31,6 +32,7 @@ def finalizar_portas(orcamento_uuid):
                 "orcamento_uuid": p.get("orcamento_uuid", orcamento_uuid),
                 "tipo": p.get("tipo"),
                 "dados": dados_array,
+                "quantidade": p.get("quantidade", 1),  # quantidade adicionada
                 "preco": p.get("preco"),
                 "svg": p.get("svg")
             })
@@ -57,6 +59,7 @@ def listar_portas(orcamento_uuid):
     """
     Lista todas as portas vinculadas a um determinado orçamento.
     Converte 'dados' de text[] de volta para dict.
+    Inclui 'quantidade' ao retornar.
     """
     from app import SUPABASE_URL, HEADERS
     try:
@@ -72,10 +75,13 @@ def listar_portas(orcamento_uuid):
             dados_array = p.get("dados", [])
             if isinstance(dados_array, list):
                 p["dados"] = dict(item.split(":", 1) for item in dados_array if ":" in item)
+            # garante que quantidade seja um inteiro
+            p["quantidade"] = int(p.get("quantidade", 1))
 
         return jsonify({"success": True, "portas": portas})
     except requests.HTTPError as http_err:
         return jsonify({"success": False, "error": f"{http_err.response.status_code} {http_err.response.text}"}), http_err.response.status_code
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+
 
