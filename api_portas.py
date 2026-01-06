@@ -21,8 +21,18 @@ def listar_portas(orcamento_uuid):
         # converte text[] de volta para dict
         for p in portas:
             dados_array = p.get("dados", [])
+            dados = {}
             if isinstance(dados_array, list):
-                p["dados"] = dict(item.split(":", 1) for item in dados_array if ":" in item)
+                for item in dados_array:
+                    if ":" not in item:
+                        continue
+                    key, value = item.split(":", 1)
+                    if key == "dobradicas_alturas":
+                        valores = [v.strip() for v in value.split(",") if v.strip()]
+                        dados[key] = valores
+                    else:
+                        dados[key] = value
+            p["dados"] = dados
             p["quantidade"] = int(p.get("quantidade", 1))
         return jsonify({"success": True, "portas": portas})
     except Exception as e:
@@ -37,6 +47,11 @@ def criar_portas(orcamento_uuid):
     if not portas or not isinstance(portas, list):
         return jsonify({"success": False, "error": "Nenhuma porta enviada"}), 400
     try:
+        r_delete = requests.delete(
+            f"{SUPABASE_URL}/rest/v1/portas?orcamento_uuid=eq.{orcamento_uuid}",
+            headers=HEADERS
+        )
+        r_delete.raise_for_status()
         payload = []
         for p in portas:
             dados_obj = p.get("dados", {})
@@ -86,6 +101,7 @@ def finalizar_orcamento(orcamento_uuid):
         return jsonify({"success": False, "error": f"{http_err.response.status_code} {http_err.response.text}"}), http_err.response.status_code
     except Exception as e:
         return jsonify({"success": False, "error": str(e)}), 500
+500
 
 
 
