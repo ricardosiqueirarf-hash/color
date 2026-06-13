@@ -1,0 +1,9 @@
+:root {
+  color-scheme: dark;
+  font-family: Inter, Arial, sans-serif;
+  background: #070707;
+  color: #f7f7f7;
+}
+* { box-sizing: border-box; }
+body { margin: 0; min-width: 320px; min-height: 100vh; background: #070707; }
+input, select, button { font: inherit; }
